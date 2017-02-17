@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/toolbtn_is_following"
+        android:icon="@drawable/unfollow"
+        android:title="Follow Folder"
+        android:onClick="handleFollowStatus"
+        app:showAsAction="ifRoom"
+        android:checkable="true" />
+
+    <item android:id="@+id/settings"
+        android:title="Settings"
+        android:onClick="viewSettings"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/help"
+        android:title="Help"
+        android:onClick="help"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/follow_status"
+        android:icon="@drawable/add"
+        android:title="Sync Now"
+        android:onClick="scanDirectories"
+        app:showAsAction="ifRoom"/>
+</menu>

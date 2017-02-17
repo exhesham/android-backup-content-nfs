@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:id="@+id/activity_ftpsync"
+    android:theme="@style/AppTheme.NoActionBar"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/my_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+
+        android:background="?attr/colorPrimaryDark"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Dark">
+
+    </android.support.v7.widget.Toolbar>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:weightSum="1">
+
+            <EditText
+                android:layout_width="296dp"
+                android:layout_height="56dp"
+                android:text="/"
+                android:inputType="none"
+                android:ems="10"
+                android:id="@+id/text_currpath"
+                android:textIsSelectable="true"
+                android:layout_weight="1.04" />
+
+            <ImageView
+                android:layout_width="74dp"
+                android:layout_height="match_parent"
+                app:srcCompat="@drawable/back"
+                android:id="@+id/imageButton"
+                android:onClick="backfolder"
+                android:layout_weight="0.75" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_toEndOf="@+id/text_ftps"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/text_ftps">
+
+            <ScrollView
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:scrollbars="none"
+                android:layout_weight="1">
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:orientation="vertical">
+                        <TableLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:id="@+id/table_files"
+                            android:layout_alignParentStart="true">
+
+                        </TableLayout>
+                </LinearLayout>
+
+            </ScrollView>
+
+        </RelativeLayout>
+    </LinearLayout>
+
+</LinearLayout>
+
