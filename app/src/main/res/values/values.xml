@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="background_material_light">#036023</color>
-    <color name="primary_text_default_material_dark">#b4ab00</color>
+    <color name="primary_text_default_material_dark">#0e3012</color>
+    <color name="primary_dark_material_dark">#50663d</color>
+    <color name="primary_material_dark">#8bc34a</color>
+    <color name="secondary_text_default_material_light">#8aaed5a4</color>
+    <color name="primary_text_default_material_light">#dee6d8d8</color>
 </resources>

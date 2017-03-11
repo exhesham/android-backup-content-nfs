@@ -14,6 +14,7 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
@@ -81,6 +82,8 @@ public class FTPSync extends AppCompatActivity {
                 mDownloadStateReceiver,
                 statusIntentFilter);
         requestPermissions();
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
     }
 
@@ -257,6 +260,9 @@ public class FTPSync extends AppCompatActivity {
     }
 
     public String getPathStatus(String path) {
+        if(path.endsWith("/")){
+            path = path.substring(0, path.length()-1);
+        }
         String following_path = Utils.getInstance(context).getConfigString(path);
         if(following_path == null || following_path.equals("")){
             return Constants.STATUS_NOTHING;
@@ -352,15 +358,27 @@ public class FTPSync extends AppCompatActivity {
     }
 
     private void testFtpConnect() {
+        if(ftpnode == null){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Utils.getInstance(context).showAlert(
+                            "Please go to settings and configure an FTP Server.",
+                            "FTP Configuration missing",
+                            false);
+                }
+            });
+            return;
+        }
         Thread thread = new Thread(new Runnable() {
 
             @Override
             public void run() {
                 try  {
-                    FTPClient con = null;
+
                     try
                     {
-                        con = new FTPClient();
+                        final FTPClient con = new FTPClient();
                         con.connect(ftpnode.getServerurl(),ftpnode.getPort());
 
                         if (con.login(ftpnode.getUsername(), ftpnode.getPassword()))
@@ -373,17 +391,41 @@ public class FTPSync extends AppCompatActivity {
                             con.setFileType(FTP.BINARY_FILE_TYPE);
 
                             if(!con.changeWorkingDirectory(ftpnode.getDefaultPath())){
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Utils.getInstance(context).showAlert(
-                                                "The FTP default path is incorrect. Make sure it is valid",
-                                                "FTP Configuration error",
-                                                false);
+                                String dirTree = ftpnode.getDefaultPath();
+                                try {
+                                    boolean dirExists = true;
 
-                                        isFtpSettingsCorrect = false;
+                                    //tokenize the string and attempt to change into each directory level.  If you cannot, then start creating.
+                                    String[] directories = dirTree.split("/");
+                                    for (String dir : directories ) {
+                                        if (!dir.isEmpty() ) {
+                                            if (dirExists) {
+                                                dirExists = con.changeWorkingDirectory(dir);
+                                            }
+                                            if (!dirExists) {
+                                                if (!con.makeDirectory(dir)) {
+                                                    throw new IOException("Unable to create remote directory '" + dir + "'.  error='" + con.getReplyString()+"'");
+                                                }
+                                                if (!con.changeWorkingDirectory(dir)) {
+                                                    throw new IOException("Unable to change into newly created remote directory '" + dir + "'.  error='" + con.getReplyString()+"'");
+                                                }
+                                            }
+                                        }
                                     }
-                                });
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Utils.getInstance(context).showAlert(
+                                                    "The FTP default path " +  ftpnode.getDefaultPath() + " Cannot be created. please choose available root path",
+                                                    "FTP Configuration Error",
+                                                    false);
+                                        }
+                                    });
+                                    isFtpSettingsCorrect = false;
+                                }
+
                             }
 
                             con.logout();
@@ -408,7 +450,7 @@ public class FTPSync extends AppCompatActivity {
                             @Override
                             public void run() {
                                 Utils.getInstance(context).showAlert(
-                                        "faulty connectivity...Failed to connect to " + ftpnode.getServerurl() + " because " + e.getMessage(),
+                                        "faulty connectivity...Failed to connect to server because ",
                                         "FTP Configuration error",
                                         false);
                             }
@@ -561,6 +603,7 @@ public class FTPSync extends AppCompatActivity {
             fillTable(currPath);
         }
     }
+
     public static class FTPAPI extends IntentService {
         public FTPAPI() {
             super("ReminderService");
@@ -607,6 +650,7 @@ public class FTPSync extends AppCompatActivity {
             try
             {
                 con = new FTPClient();
+                con.setControlEncoding("UTF-8");
                 con.connect(ftpnode.getServerurl(),ftpnode.getPort());
 
                 if (con.login(ftpnode.getUsername(), ftpnode.getPassword()))
@@ -618,17 +662,17 @@ public class FTPSync extends AppCompatActivity {
                     }
                     con.setFileType(FTP.BINARY_FILE_TYPE);
                     Log.v("onHandleIntent","Will cd to path " + dstfolder);
-//                    con.setControlKeepAliveTimeout(600);
-//                    con.setDataTimeout(1600);
-//                    con.setConnectTimeout(1600);
+                    con.setControlKeepAliveTimeout(600);
+                    con.setDataTimeout(1600);
+                    con.setConnectTimeout(1600);
                     ftpCreateDirectoryTree(con,dstfolder);
                     Log.v("onHandleIntent","navigating to dir passed successfully!");
-
+                    con.changeWorkingDirectory(dstfolder);
                     String data = filepath;
                     Log.v("FTPAPI",con.getStatus());
                     FileInputStream in = new FileInputStream(new File(data));
                     updateStatus(filepath,Constants.STATUS_SENDING);
-                    boolean result = con.storeFile(dstfolder + "/" + new File(data).getName(), in);
+                    boolean result = con.storeFile(new File(data).getName(), in);
                     Log.v("send",Integer.toString(con.getReplyCode()));
                     Log.v("send",con.getReplyString());
                     in.close();
@@ -654,6 +698,10 @@ public class FTPSync extends AppCompatActivity {
             }
             totalHandled++;
         } // onHandleIntent
+
+    }
+
+    public void viewRules(MenuItem item){
 
     }
 

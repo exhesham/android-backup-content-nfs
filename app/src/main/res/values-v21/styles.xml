@@ -15,5 +15,8 @@
         <item name="android:colorBackground">@color/colorPrimary</item>
         <item name="android:navigationBarColor">?attr/actionModeSplitBackground</item>
         <item name="android:statusBarColor">?android:attr/textColorPrimaryInverse</item>
+        <item name="android:textColorPrimary">@color/text</item>
+        <item name="android:colorForeground">@color/cardview_light_background</item>
     </style>
+
 </resources>

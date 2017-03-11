@@ -61,7 +61,7 @@ public class Utils {
             if(addTextbox ){
                 alertDialog.setView(input);
 
-                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
+                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Cancel",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
 //                                dialog.dismiss();
@@ -69,7 +69,7 @@ public class Utils {
                             }
                         });
             }
-            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "Cancel",
+            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "Alright",
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
