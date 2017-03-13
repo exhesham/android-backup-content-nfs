@@ -1,5 +1,7 @@
 package com.apps.exhesham.autoftpsync.utils;
 
+import com.apps.exhesham.autoftpsync.Rules;
+
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -83,6 +85,16 @@ public class PathDetails {
 
     public String genPathRelativeToDepth() {
         String filepath = FilenameUtils.getFullPathNoEndSeparator(getFullpath());
+
+        if(!isDirectory()){
+            String extension = FilenameUtils.getExtension(getFullpath());
+            String folderName = new Rules().getExtensionFolder(extension);
+            if(folderName != null){
+                return folderName;
+            }else{
+                return null;
+            }
+        }
         String res = FilenameUtils.getBaseName(filepath);
         for(int i = 0;i < getDepth();i++){
             filepath = FilenameUtils.getFullPathNoEndSeparator(filepath);

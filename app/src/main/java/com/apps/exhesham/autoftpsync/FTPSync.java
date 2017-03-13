@@ -247,9 +247,13 @@ public class FTPSync extends AppCompatActivity {
         try{
             Intent mServiceIntent = new Intent(context, FTPAPI.class);
             mServiceIntent.putExtra("full-path",pd.getFullpath());
-
+            String calculatedPath = pd.genPathRelativeToDepth();
+            if(calculatedPath == null){
+                Log.v("SendFile","The file is ignored:"+pd.getFullpath());
+                return 0;
+            }
             mServiceIntent.putExtra("dst-dir",ftpnode.getDefaultPath() + "/"
-                    + pd.genPathRelativeToDepth());
+                    + calculatedPath);
             context.startService(mServiceIntent);
 
         }catch (Exception e){
@@ -645,6 +649,7 @@ public class FTPSync extends AppCompatActivity {
 //            if(uploadFailing){
 //                return;
 //            }
+
             FTPClient con = null;
             updateStatus(filepath,Constants.STATUS_CONNECTING);
             try
@@ -702,7 +707,12 @@ public class FTPSync extends AppCompatActivity {
     }
 
     public void viewRules(MenuItem item){
-
+        try{
+            Intent k = new Intent(FTPSync.this, Rules.class);
+            startActivityForResult(k,1);
+        }catch (Exception ex){
+            Log.getStackTraceString(ex);
+        }
     }
 
     public void scanDirectories(MenuItem item){
