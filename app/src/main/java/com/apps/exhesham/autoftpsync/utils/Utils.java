@@ -4,10 +4,18 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
+import android.support.v7.view.menu.ActionMenuItemView;
 import android.text.InputType;
 import android.util.Log;
+import android.view.MenuItem;
 import android.widget.EditText;
 
+import com.apps.exhesham.autoftpsync.FTPSync;
+import com.apps.exhesham.autoftpsync.R;
+
+import org.apache.commons.io.FilenameUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -82,6 +90,74 @@ public class Utils {
             return null;
         }
 
+    }
+    private String generateStatus(String status,String path) {
+        JSONObject jo = new JSONObject();
+        try {
+            jo.put("date",System.currentTimeMillis());
+            jo.put("status",status);
+            jo.put("path",path);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jo.toString();
+    }
+    public String getPathStatus(String path) {
+        if(path.endsWith("/")){
+            path = path.substring(0, path.length()-1);
+        }
+        String following_path = getConfigString(path);
+        if(following_path == null || following_path.equals("")){
+            return FTPSync.Constants.STATUS_NOTHING;
+        }
+        JSONObject jo;
+        try {
+            jo = new JSONObject(following_path);
+            return jo.getString("status");
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return FTPSync.Constants.STATUS_NOTHING;
+        }
+    }
+    public void convertFollowStateInDB(String currPath) {
+
+        String status = getPathStatus(currPath);
+        String following_paths = getConfigString("following_paths");
+        JSONArray ja;
+        try {
+            ja = new JSONArray(following_paths);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            ja = new JSONArray();
+        }
+
+        if(status.equals(FTPSync.Constants.FOLLOWING_DIR)){
+
+            storeConfigString(currPath,generateStatus(FTPSync.Constants.NOT_FOLLOWING_DIR,currPath));
+
+            for(int i=0;i<ja.length();i++){
+                try {
+                    if(ja.getJSONObject(i).getString("path").equals(currPath)){
+
+                        ja.remove(i);
+                        break;
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }else{
+            storeConfigString(currPath, generateStatus(FTPSync.Constants.FOLLOWING_DIR, currPath));
+            try {
+                JSONObject jo = new JSONObject(generateStatus(FTPSync.Constants.FOLLOWING_DIR, currPath));
+                ja.put(jo);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        storeConfigString("following_paths",ja.toString());
     }
 
     public FTPNode getFTPSettings() {

@@ -1,10 +1,12 @@
 package com.apps.exhesham.autoftpsync;
 
 import android.Manifest;
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.app.TaskStackBuilder;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -27,6 +29,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -84,6 +90,7 @@ public class FTPSync extends AppCompatActivity {
         requestPermissions();
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+
 
     }
 
@@ -163,7 +170,7 @@ public class FTPSync extends AppCompatActivity {
         return true;
     }
     public void backfolder(View v){
-        if(currPath == "/"){
+        if( "/".equals(currPath)){
             return;
         }else{
             String prevPath = currPath.substring(0,currPath.replaceAll("/$", "").lastIndexOf('/')+1);
@@ -173,7 +180,7 @@ public class FTPSync extends AppCompatActivity {
     }
     @Override
     public void onBackPressed() {
-        if(currPath == "/"){
+        if( "/".equals(currPath)){
             super.onBackPressed();
         }else{
             backfolder(null);
@@ -250,7 +257,7 @@ public class FTPSync extends AppCompatActivity {
             String calculatedPath = pd.genPathRelativeToDepth();
             if(calculatedPath == null){
                 Log.v("SendFile","The file is ignored:"+pd.getFullpath());
-                return 0;
+                return -3;
             }
             mServiceIntent.putExtra("dst-dir",ftpnode.getDefaultPath() + "/"
                     + calculatedPath);
@@ -374,15 +381,16 @@ public class FTPSync extends AppCompatActivity {
             });
             return;
         }
-        Thread thread = new Thread(new Runnable() {
-
-            @Override
+        final ProgressDialog progressDialog = ProgressDialog.show(this, "Checking FTP Settings", "Please wait. Checking ftp connectivity and settings correctness...");
+        new Thread() {
             public void run() {
                 try  {
 
                     try
                     {
                         final FTPClient con = new FTPClient();
+                        con.setConnectTimeout(5000);
+                        con.setDefaultTimeout(5000);
                         con.connect(ftpnode.getServerurl(),ftpnode.getPort());
 
                         if (con.login(ftpnode.getUsername(), ftpnode.getPassword()))
@@ -467,9 +475,20 @@ public class FTPSync extends AppCompatActivity {
                     e.printStackTrace();
                     isFtpSettingsCorrect = false;
                 }
+                // dismiss the progress dialog
+                progressDialog.dismiss();
             }
-        });
-        thread.start();
+        }.start();
+
+//        Thread thread = new Thread(new Runnable() {
+//
+//            @Override
+//            public void run() {
+//
+//
+//            }
+//        });
+//        thread.start();
     }
 
     public void viewSettings(MenuItem item) {
@@ -488,6 +507,7 @@ public class FTPSync extends AppCompatActivity {
             Log.getStackTraceString(ex);
         }
     }
+
     public void handleFollowStatus(MenuItem item) {
         if(ftpnode == null){
             Utils.getInstance(context).showAlert(
@@ -525,12 +545,11 @@ public class FTPSync extends AppCompatActivity {
 
         }else{
             iv.setTitle(Constants.FOLLOWING_DIR);
-            String dstpath = ftpnode.getDefaultPath() + "/" + FilenameUtils.getBaseName(currPath);
             Utils.getInstance(context).storeConfigString(currPath,
                     generateStatus(Constants.FOLLOWING_DIR, currPath));
             try {
                 JSONObject jo = new JSONObject(generateStatus(Constants.FOLLOWING_DIR, currPath));
-                jo.put("dst-path", dstpath);
+
                 ja.put(jo);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -593,9 +612,13 @@ public class FTPSync extends AppCompatActivity {
             }
             if(totalFilesShouldBeSent != 0 && totalHandled == totalFilesShouldBeSent && totalFilesAlreadySent != 0){
                 startNotification("Finished uploading "+Integer.toString(totalFilesAlreadySent) + " Files");
+                //TODO: Stop Rotating waiting logo
+                shouldStartRotatingIcon(false);
             }
             if(totalFilesShouldBeSent != 0 && totalHandled == totalFilesShouldBeSent && totalFilesAlreadySent == 0){
                 startNotification("Failed to upload all "+Integer.toString(totalFilesShouldBeSent) +  " Files! Check FTP Configuration or connectivity");
+                //TODO: Stop Rotating waiting logo
+                shouldStartRotatingIcon(false);
             }
 //            if(uploadFailing){
 //                startNotification("Failed to upload. Check FTP directory, space, connectivity");
@@ -607,7 +630,25 @@ public class FTPSync extends AppCompatActivity {
             fillTable(currPath);
         }
     }
+    private void shouldStartRotatingIcon(boolean start){
+        ActionMenuItemView iv = (ActionMenuItemView )findViewById(R.id.follow_status);
+//            iv.startAnimation(rotation);
+        ObjectAnimator imageViewObjectAnimator = ObjectAnimator.ofFloat(iv ,
+                "rotation", 0f, 360f);
+        imageViewObjectAnimator.setStartDelay(140);
+        imageViewObjectAnimator.setRepeatCount(ObjectAnimator.INFINITE);
+        imageViewObjectAnimator.setRepeatMode(ObjectAnimator.RESTART);
+        imageViewObjectAnimator.setInterpolator(new AccelerateInterpolator());
 
+        if(start){
+            iv.setEnabled(false);
+            imageViewObjectAnimator.start();
+        }else{
+            iv.setEnabled(true);
+            imageViewObjectAnimator.cancel();
+
+        }
+    }
     public static class FTPAPI extends IntentService {
         public FTPAPI() {
             super("ReminderService");
@@ -706,6 +747,14 @@ public class FTPSync extends AppCompatActivity {
 
     }
 
+    public void viewFollowedDirs(MenuItem item){
+        try{
+            Intent k = new Intent(FTPSync.this, ListFollowedDirs.class);
+            startActivityForResult(k,1);
+        }catch (Exception ex){
+            Log.getStackTraceString(ex);
+        }
+    }
     public void viewRules(MenuItem item){
         try{
             Intent k = new Intent(FTPSync.this, Rules.class);
@@ -722,6 +771,8 @@ public class FTPSync extends AppCompatActivity {
         if(isFtpSettingsCorrect == false){
             return;
         }
+        shouldStartRotatingIcon(true);
+        //TODO: Start Rotating waiting logo
         if (totalFilesShouldBeSent !=0 && totalHandled < totalFilesShouldBeSent){
             Utils.getInstance(context).showAlert(
                     "Sync process already running. please wait until it finishes",
@@ -758,7 +809,12 @@ public class FTPSync extends AppCompatActivity {
                                         "Please go to Settings and configure your FTP",
                                         "No FTP Configured",
                                         false);
+                                //TODO: Stop Rotating waiting logo
+                                shouldStartRotatingIcon(false);
                                 return;
+                            }
+                            if(res == 0){
+                                totalFilesShouldBeSent++;
                             }
 //                            if(uploadFailing){
 //                                Utils.getInstance(context).showAlert(
@@ -767,7 +823,6 @@ public class FTPSync extends AppCompatActivity {
 //                                        false);
 //                                return;
 //                            }
-                            totalFilesShouldBeSent++;
                         }
                     }
 

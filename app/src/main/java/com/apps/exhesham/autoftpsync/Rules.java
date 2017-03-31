@@ -1,8 +1,10 @@
 package com.apps.exhesham.autoftpsync;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -10,11 +12,14 @@ import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
+import android.util.ArraySet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -29,21 +34,23 @@ import com.apps.exhesham.autoftpsync.utils.Utils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
+import java.util.Set;
 
 
 public class Rules extends AppCompatActivity {
     private Context context;
 
     public ArrayMap<String,String> getRules() {
-        if(rules == null){
+        if(_rules == null){
             Log.v("read rules", " Reading rules");
-            rules = readRules();
+            _rules = readRules();
         }
-        return rules;
+        return _rules;
     }
 
-    private static ArrayMap<String,String> rules;
+    private static ArrayMap<String,String> _rules;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,9 +63,7 @@ public class Rules extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-                addNewRule();
+                showDialog(null, null);
             }
         });
         displayRulesOnTable();
@@ -105,9 +110,21 @@ public class Rules extends AppCompatActivity {
         return  rules;
     }
 
-    private void deleteRule(String extension, String foldername){
-        ArrayMap<String,String> rules = readRules();
-        rules.remove(extension);
+    public void deleteRules(MenuItem item){
+        TableLayout ll = (TableLayout) findViewById(R.id.table_rules);
+        for(Integer index : checked_boxes.keySet()){
+            if(checked_boxes.get(index) == true) {
+                TableRow tr = (TableRow) ll.getChildAt(index);
+                String extension = ((TextView) tr.getChildAt(1)).getText().toString();
+                getRules().remove(extension);
+            }
+        }
+        saveChanges(null);
+        displayRulesOnTable();
+    }
+    public void saveChanges(MenuItem item){
+        ArrayMap<String,String> rules = getRules();
+
         JSONArray ja = new JSONArray();
         for (String key : rules.keySet()) {
             try {
@@ -118,78 +135,99 @@ public class Rules extends AppCompatActivity {
         }
         Utils.getInstance(context).storeConfigString("rules",ja.toString());
     }
-    private void saveChanges(String extension, String foldername){
-
-    }
-    private void editChanges(String extension, String foldername){
-
-    }
-    private void displayRulesOnTable(){
-        ArrayMap<String, String> rules = readRules();
-
+    public void editChanges(MenuItem item){
+        if (selected_row <= 0 ){
+            return;
+        }
         TableLayout ll = (TableLayout) findViewById(R.id.table_rules);
+        TableRow tr = (TableRow) ll.getChildAt(selected_row);
+        String extension = ((TextView)tr.getChildAt(1)).getText().toString();
+        String folder = ((TextView)tr.getChildAt(2)).getText().toString();
+        showDialog(extension, folder);
+    }
+    private static int selected_row = 1;
+    private static ArrayMap<Integer, Boolean> checked_boxes = new ArrayMap<Integer, Boolean>();
+    private void displayRulesOnTable(){
+        ArrayMap<String, String> rules = getRules();
+
+        final TableLayout ll = (TableLayout) findViewById(R.id.table_rules);
 //        ll.removeAllViews();
         while (ll.getChildCount() > 1){ // Remove all except header
             ll.removeViewAt(ll.getChildCount() - 1);
         }
+        checked_boxes.clear();
         int i = 1;
-        TableRow defaultRow = null;
+        TableRow defaultRow = new TableRow(this);
         for (String key : rules.keySet()) {
-            final TableRow row= new TableRow(this);
-            TableRow.LayoutParams lp = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT);
-            row.setLayoutParams(lp);
-            final CheckBox checkBox = new CheckBox(this);
+            TableRow newRow= new TableRow(this);
+            newRow.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
 
-            checkBox.setText(key.equals("*")?"ALL THE REST":key);
-
+            CheckBox checkBox = new CheckBox(this);
             checkBox.setGravity(Gravity.NO_GRAVITY);
+            checkBox.setTag(i);
             TextView extension = new TextView(this);
-            extension.setLayoutParams(new TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 0.7f));
             extension.setText(key.equals("*")?"ALL THE REST":key);
-            TextView folderName = new TextView(this);
-            folderName.setLayoutParams(new TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 0.7f));
-            folderName.setText(rules.get(key));
-            ImageView arrowImage = new ImageView(this);
-            arrowImage.setImageResource(R.drawable.folder);
+            extension.setTextColor(Color.BLACK);
+            extension.setTextSize(16f);
 
-            row.setFocusable(true);
-            row.setFocusableInTouchMode(true);
+            TextView folderName = new TextView(this);
+            //folderName.setLayoutParams(new TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 0.7f));
+            folderName.setText(rules.get(key));
+            folderName.setTextColor(Color.BLACK);
+            folderName.setTextSize(16f);
+
+            newRow.setFocusable(true);
+            newRow.setFocusableInTouchMode(true);
+            newRow.setBackgroundResource(android.R.drawable.list_selector_background);
+
             final int finalI = i;
-            row.setOnClickListener(new View.OnClickListener() {
+            newRow.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    selected_row = finalI;
+                }
+            });
+            newRow.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     TableLayout ll = (TableLayout) findViewById(R.id.table_rules);
                     ll.getChildAt(finalI).setBackgroundResource(android.R.drawable.list_selector_background);
+                    selected_row = finalI;
                 }
             });
-
-            checkBox.setOnClickListener(new View.OnClickListener() {
+            checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
-                public void onClick(View v) {
-                    TableLayout ll = (TableLayout) findViewById(R.id.table_rules);
-                    if(!checkBox.isChecked()){
-
-                        ll.getChildAt(finalI).setBackgroundResource(android.R.drawable.list_selector_background);
-
-                    }else{
-                        ll.getChildAt(finalI).setBackgroundResource(android.R.drawable.list_selector_background);
-                        ll.getChildAt(finalI).setBackgroundColor(0xFFe1e9ce);
-
-                    }
-
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    checked_boxes.put(finalI,isChecked);
                 }
             });
-            row.addView(checkBox);
-///            row.addView(extension);
+
+            newRow.addView(checkBox,(new TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT,0.3f)));
+            newRow.addView(extension,(new TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT,0.8f)));
             //row.addView(arrowImage);
-            row.addView(folderName);
+            newRow.addView(folderName,(new TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT,0.8f)));
             if(key.equals("*")){
-                defaultRow = row;
-            }else{
-                ll.addView(row,i++);
+                defaultRow = newRow;
+                continue;
             }
+            ll.addView(newRow,i++);
         }
-        ll.addView(defaultRow,i++);
+        defaultRow.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                selected_row = ll.getChildCount()-1;
+            }
+        });
+        defaultRow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TableLayout ll = (TableLayout) findViewById(R.id.table_rules);
+                ll.getChildAt(ll.getChildCount()-1).setBackgroundResource(android.R.drawable.list_selector_background);
+                selected_row = ll.getChildCount()-1;
+            }
+        });
+
+        ll.addView(defaultRow);
     }
 
     public String getExtensionFolder(String extension) {
@@ -203,37 +241,63 @@ public class Rules extends AppCompatActivity {
         }
         return rules.get("*");
     }
-    private String newRuleExtension = "";
-    private String newRuleFolder = "";
 
-    private void addNewRule(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Title");
 
-        // Set up the input
-        final EditText inputExtension = new EditText(this);
-        final EditText inputFolder = new EditText(this);
-        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-        inputExtension.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        inputFolder.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        builder.setView(inputExtension);
-        builder.setView(inputFolder);
-
-        // Set up the buttons
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+    private void showDialog(final String extension, final String foldername){
+        final Dialog commentDialog = new Dialog(this);
+        commentDialog.setContentView(R.layout.edit_rule_layout);
+        Button okBtn = (Button) commentDialog.findViewById(R.id.ok);
+        final TextView extensionField = (TextView) commentDialog.findViewById(R.id.extension);
+        final TextView folderField = (TextView) commentDialog.findViewById(R.id.folder_name);
+        final CheckBox ignoreOthers= (CheckBox) commentDialog.findViewById(R.id.ignore_other_extensions);
+        if(extension != null && foldername != null){
+            extensionField.setText(extension);
+            folderField.setText(foldername);
+        }
+        if("ALL THE REST".equals(extension)){
+            extensionField.setEnabled(false);
+            ignoreOthers.setVisibility(View.VISIBLE);
+        }else{
+            extensionField.setEnabled(true);
+            ignoreOthers.setVisibility(View.INVISIBLE);
+        }
+        okBtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                newRuleExtension = inputExtension.getText().toString();
-                newRuleFolder = inputFolder.getText().toString();
+            public void onClick(View v) {
+                //do anything you want here before close the dialog
+
+                String newRuleExtension = extensionField.getText().toString();
+                String newRuleFolder = folderField.getText().toString();
+                if("ALL THE REST".equals(extension)){
+                    if(getRules().containsKey("*")){
+                        getRules().remove("*");
+                    }
+                    if(ignoreOthers.isChecked()){
+                        getRules().put("*","<IGNORE FILE>");
+                    }else{
+                        getRules().put("*",newRuleFolder);
+                    }
+
+                }else{
+                    if(!newRuleExtension.equals("") && !newRuleFolder.equals("")){
+                        if(getRules().containsKey(extension)){
+                            getRules().remove(extension);
+                        }
+                        getRules().put(newRuleExtension,newRuleFolder);
+                    }
+                }
+                saveChanges(null);
+                displayRulesOnTable();
+                commentDialog.dismiss();
             }
         });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        Button cancelBtn = (Button) commentDialog.findViewById(R.id.cancel);
+        cancelBtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
+            public void onClick(View v) {
+                commentDialog.dismiss();
             }
         });
-
-        builder.show();
+        commentDialog.show();
     }
 }
