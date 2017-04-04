@@ -1,0 +1,91 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:padding="6dip"
+    android:background="@android:color/holo_orange_dark">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:weightSum="1">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="342dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.10">
+
+            <ImageView
+                android:id="@+id/icon"
+                android:layout_width="20dp"
+                android:layout_height="fill_parent"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginRight="6dip"
+                android:contentDescription="TODO"
+                android:src="@drawable/folder"
+                android:layout_weight="0.06" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="26dip"
+                    android:text="..."
+                    android:ellipsize="end"
+                    android:id="@+id/firstLine"
+                    android:layout_toRightOf="@+id/icon"
+                    android:layout_toLeftOf="@+id/imgStatus"
+                    android:textColor="@android:color/black" />
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="26dip"
+                        android:text="Synced:"
+                        android:id="@+id/total_synced_files"
+                        android:layout_below="@+id/firstLine"
+                        android:layout_toRightOf="@+id/icon"
+                        android:textColor="@color/text"
+                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:layout_weight="0.79" />
+
+                    <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="26dip"
+                    android:text="Total:"
+                    android:id="@+id/total_files"
+                    android:layout_below="@+id/firstLine"
+                    android:layout_toRightOf="@+id/icon"
+                    android:textColor="@android:color/black"
+                    android:layout_toLeftOf="@+id/imgStatus"
+                        android:layout_weight="0.69" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="fill_parent"
+            android:id="@+id/imgStatus"
+            android:layout_alignParentStart="false"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="false"
+            android:layout_alignParentTop="true"
+            android:src="@drawable/delete" />
+    </LinearLayout>
+
+
+</RelativeLayout>

@@ -49,7 +49,7 @@ android:id="@+id/activity_ftpsync"
                 android:layout_height="match_parent"
                 app:srcCompat="@drawable/back"
                 android:id="@+id/imageButton"
-                android:onClick="backfolder"
+                android:onClick="backFolder"
                 android:layout_weight="0.75" />
         </LinearLayout>
 

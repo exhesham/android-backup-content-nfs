@@ -13,6 +13,7 @@ import android.widget.EditText;
 
 import com.apps.exhesham.autoftpsync.FTPSync;
 import com.apps.exhesham.autoftpsync.R;
+import com.apps.exhesham.autoftpsync.Rules;
 
 import org.apache.commons.io.FilenameUtils;
 import org.json.JSONArray;
@@ -22,6 +23,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 
 /**
@@ -109,7 +111,7 @@ public class Utils {
         }
         String following_path = getConfigString(path);
         if(following_path == null || following_path.equals("")){
-            return FTPSync.Constants.STATUS_NOTHING;
+            return Constants.STATUS_NOTHING;
         }
         JSONObject jo;
         try {
@@ -117,7 +119,7 @@ public class Utils {
             return jo.getString("status");
         } catch (JSONException e) {
             e.printStackTrace();
-            return FTPSync.Constants.STATUS_NOTHING;
+            return Constants.STATUS_NOTHING;
         }
     }
     public void convertFollowStateInDB(String currPath) {
@@ -132,9 +134,9 @@ public class Utils {
             ja = new JSONArray();
         }
 
-        if(status.equals(FTPSync.Constants.FOLLOWING_DIR)){
+        if(status.equals(Constants.FOLLOWING_DIR)){
 
-            storeConfigString(currPath,generateStatus(FTPSync.Constants.NOT_FOLLOWING_DIR,currPath));
+            storeConfigString(currPath,generateStatus(Constants.NOT_FOLLOWING_DIR,currPath));
 
             for(int i=0;i<ja.length();i++){
                 try {
@@ -149,9 +151,9 @@ public class Utils {
             }
 
         }else{
-            storeConfigString(currPath, generateStatus(FTPSync.Constants.FOLLOWING_DIR, currPath));
+            storeConfigString(currPath, generateStatus(Constants.FOLLOWING_DIR, currPath));
             try {
-                JSONObject jo = new JSONObject(generateStatus(FTPSync.Constants.FOLLOWING_DIR, currPath));
+                JSONObject jo = new JSONObject(generateStatus(Constants.FOLLOWING_DIR, currPath));
                 ja.put(jo);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -190,7 +192,9 @@ public class Utils {
                 if(f.isDirectory()){
                     pdArray.addAll(getFoldersRecursiveAux(f.getAbsolutePath(),depth+1));
                 }else{
-                    pdArray.add(new PathDetails(f,depth));
+                    if(!new Rules().shouldIgnoreFile(f.getAbsolutePath())){
+                        pdArray.add(new PathDetails(f,depth));
+                    }
                 }
             }
             return pdArray;
@@ -218,6 +222,29 @@ public class Utils {
         }
         private static boolean isPathExist(String path) {
             return  new File(path).exists();
+        }
+
+        public static String getFileCategory(String fullpth) {
+            String extension = FilenameUtils.getExtension(fullpth).toLowerCase();
+            if(Arrays.asList(Constants.PHOTOS_CATERGORY_EXTS).contains(extension)){
+                return Constants.PHOTOS_CATERGORY_NAME;
+            }
+            if(Arrays.asList(Constants.VIDEO_CATERGORY_EXTS).contains(extension)){
+                return Constants.VIDEO_CATERGORY_NAME;
+            }
+            if(Arrays.asList(Constants.MUSIC_CATERGORY_EXTS).contains(extension)){
+                return Constants.MUSIC_CATERGORY_NAME;
+            }
+            if(Arrays.asList(Constants.RECORDING_CATERGORY_EXTS).contains(extension)){
+                return Constants.RECORDINGS_CATERGORY_NAME;
+            }
+            if(Arrays.asList(Constants.DOCUMENTS_CATERGORY_EXTS).contains(extension)){
+                return Constants.DOCUMENTS_CATERGORY_NAME;
+            }
+            if(Arrays.asList(Constants.COMPRESSED_CATERGORY_EXTS).contains(extension)){
+                return Constants.COMPRESSED_CATERGORY_NAME;
+            }
+            return null;
         }
     }
 

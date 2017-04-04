@@ -8,23 +8,9 @@
         android:onClick="handleFollowStatus"
         app:showAsAction="always"
         android:checkable="true" />
-    <item android:id="@+id/rules"
-        android:icon="@drawable/rules"
-        android:title="Rules"
-        android:onClick="viewRules"
-        app:showAsAction="always"/>
-    <item android:id="@+id/settings"
-        android:title="Settings"
-        android:icon="@drawable/settings"
-        android:onClick="viewSettings" />
-    <item android:id="@+id/help"
-        android:title="Help"
-        android:icon="@drawable/help"
-        android:onClick="help" />
-    <item android:id="@+id/follow_status"
-        android:icon="@drawable/add"
-        android:title="Sync Now"
-        android:onClick="scanDirectories"
-        app:showAsAction="always"/>
+
+
+
+
 
 </menu>

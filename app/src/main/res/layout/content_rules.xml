@@ -18,9 +18,8 @@
         android:layout_height="match_parent"
         android:id="@+id/table_rules"
         android:layout_marginBottom="47dp"
-        android:layout_alignParentBottom="true"
-        android:stretchColumns="0,1"
-        android:layout_alignParentEnd="true">
+
+        >
         <TableRow android:layout_width="fill_parent">
             <TextView
                 android:layout_width="wrap_content"

@@ -31,6 +31,7 @@ import android.widget.TextView;
 
 import com.apps.exhesham.autoftpsync.utils.Utils;
 
+import org.apache.commons.io.FilenameUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -299,5 +300,10 @@ public class Rules extends AppCompatActivity {
             }
         });
         commentDialog.show();
+    }
+    public boolean shouldIgnoreFile(String path) {
+        String extension = FilenameUtils.getExtension(path);
+        String folderName = getExtensionFolder(extension);
+        return folderName == null;
     }
 }

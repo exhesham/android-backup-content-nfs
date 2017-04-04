@@ -6,17 +6,20 @@
         android:icon="@drawable/delete"
         android:title="Delete Rule"
         app:showAsAction="always"
+        android:onClick="deleteRules"
         android:checkable="true" />
     <item
         android:id="@+id/toolbtn_save"
         android:icon="@drawable/save"
         android:title="Save Changes"
+        android:onClick="saveChanges"
         app:showAsAction="always"
         android:checkable="true" />
     <item
         android:id="@+id/toolbtn_edit"
         android:icon="@drawable/edit"
         android:title="Edit Rule"
+        android:onClick="editChanges"
         app:showAsAction="always"
         android:checkable="true" />
 

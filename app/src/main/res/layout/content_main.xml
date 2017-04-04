@@ -1,0 +1,609 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.apps.exhesham.autoftpsync.MainActivity"
+    tools:showIn="@layout/app_bar_main">
+
+    <LinearLayout
+
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1.10">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/photos_row"
+            android:weightSum="1"
+            android:background="@drawable/side_nav_bar">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="342dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.10">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@mipmap/photos2"
+                    android:id="@+id/imageView2"
+                    android:layout_weight="0.06" />
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="26dip"
+                        android:text="Photos"
+                        android:ellipsize="end"
+                        android:id="@+id/firstLine"
+                        android:layout_toRightOf="@+id/icon"
+                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textColor="@android:color/black" />
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Synced:"
+                            android:id="@+id/photos_total_synced_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.79" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Total:"
+                            android:id="@+id/photos_total_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.69" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="fill_parent"
+                android:id="@+id/imgStatus"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="false"
+                android:layout_alignParentTop="true"
+                android:src="@drawable/unfollow" />
+        </LinearLayout>
+
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:weightSum="1"
+            android:background="@drawable/side_nav_bar"
+            android:id="@+id/videos_row">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="342dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.10">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@mipmap/videos"
+                    android:id="@+id/imageView4"
+                    android:layout_weight="0.06" />
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="26dip"
+                        android:text="Videos"
+                        android:ellipsize="end"
+                        android:id="@+id/video_firstLine"
+                        android:layout_toRightOf="@+id/icon"
+                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textColor="@android:color/black" />
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Synced:"
+                            android:id="@+id/video_total_synced_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.79" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Total:"
+                            android:id="@+id/video_total_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.69" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="fill_parent"
+                android:id="@+id/video_status"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="false"
+                android:layout_alignParentTop="true"
+                android:src="@drawable/unfollow" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:weightSum="1"
+            android:background="@drawable/side_nav_bar"
+            android:id="@+id/music_row">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="342dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.10">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@mipmap/music"
+                    android:id="@+id/music_image"
+                    android:layout_weight="0.06" />
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="26dip"
+                        android:text="Music"
+                        android:ellipsize="end"
+                        android:id="@+id/music_firstLine"
+                        android:layout_toRightOf="@+id/icon"
+                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textColor="@android:color/black" />
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Synced:"
+                            android:id="@+id/music_total_synced_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.79" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Total:"
+                            android:id="@+id/music_total_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.69" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="fill_parent"
+                android:id="@+id/music_status"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="false"
+                android:layout_alignParentTop="true"
+                android:src="@drawable/unfollow" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:weightSum="1"
+            android:background="@drawable/side_nav_bar"
+            android:id="@+id/compressed_row">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="342dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.10">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@mipmap/compressed"
+                    android:id="@+id/compressed_image"
+                    android:layout_weight="0.06" />
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="26dip"
+                        android:text="Compressed"
+                        android:ellipsize="end"
+                        android:id="@+id/compressed_firstLine"
+                        android:layout_toRightOf="@+id/icon"
+                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textColor="@android:color/black" />
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Synced:"
+                            android:id="@+id/compressed_total_synced_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.79" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Total:"
+                            android:id="@+id/compressed_total_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.69" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="fill_parent"
+                android:id="@+id/compressed_status"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="false"
+                android:layout_alignParentTop="true"
+                android:src="@drawable/unfollow" />
+        </LinearLayout>
+
+
+
+
+
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:weightSum="1"
+            android:background="@drawable/side_nav_bar"
+            android:id="@+id/recordings_row">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="342dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.10">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@mipmap/recordings"
+                    android:id="@+id/recordings_image"
+                    android:layout_weight="0.06" />
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="26dip"
+                        android:text="Recordings"
+                        android:ellipsize="end"
+                        android:id="@+id/recordings_firstLine"
+                        android:layout_toRightOf="@+id/icon"
+                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textColor="@android:color/black" />
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Synced:"
+                            android:id="@+id/recordings_total_synced_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.79" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Total:"
+                            android:id="@+id/recordings_total_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.69" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="fill_parent"
+                android:id="@+id/recordings_status"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="false"
+                android:layout_alignParentTop="true"
+                android:src="@drawable/unfollow" />
+        </LinearLayout>
+
+
+
+
+
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:weightSum="1"
+            android:background="@drawable/side_nav_bar"
+            android:id="@+id/documents_row">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="342dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.10">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@mipmap/documents"
+                    android:id="@+id/documents_image"
+                    android:layout_weight="0.06" />
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="26dip"
+                        android:text="Documents"
+                        android:ellipsize="end"
+                        android:id="@+id/documents_firstLine"
+                        android:layout_toRightOf="@+id/icon"
+                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textColor="@android:color/black" />
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Synced:"
+                            android:id="@+id/documents_total_synced_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.79" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Total:"
+                            android:id="@+id/documents_total_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.69" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="fill_parent"
+                android:id="@+id/documents_status"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="false"
+                android:layout_alignParentTop="true"
+                android:src="@drawable/unfollow" />
+        </LinearLayout>
+
+
+
+
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:weightSum="1"
+            android:background="@drawable/side_nav_bar"
+            android:id="@+id/apps_row">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="342dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.10">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@mipmap/apk"
+                    android:id="@+id/apk_image"
+                    android:layout_weight="0.06" />
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="26dip"
+                        android:text="Apps"
+                        android:ellipsize="end"
+                        android:id="@+id/apk_firstLine"
+                        android:layout_toRightOf="@+id/icon"
+                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textColor="@android:color/black" />
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Synced:"
+                            android:id="@+id/apk_total_synced_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.79" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dip"
+                            android:text="Total:"
+                            android:id="@+id/apk_total_files"
+                            android:layout_below="@+id/firstLine"
+                            android:layout_toRightOf="@+id/icon"
+                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_weight="0.69" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="fill_parent"
+                android:id="@+id/apk_status"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="false"
+                android:layout_alignParentTop="true"
+                android:src="@drawable/unfollow" />
+        </LinearLayout>
+
+
+
+    </LinearLayout>
+
+
+</RelativeLayout>

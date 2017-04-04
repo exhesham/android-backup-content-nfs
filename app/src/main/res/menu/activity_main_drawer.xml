@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_camera"
+            android:icon="@drawable/folder"
+            android:onClick="viewFileSystem"
+            android:title="File System" />
+        <item
+            android:id="@+id/nav_gallery"
+            android:icon="@drawable/rules"
+            android:onClick="viewRules"
+            android:title="Rules" />
+        <item
+            android:id="@+id/nav_slideshow"
+            android:icon="@drawable/followed_dirs"
+            android:onClick="viewFollowedDirs"
+            android:title="Followd Directories" />
+        <item
+            android:id="@+id/nav_manage"
+            android:onClick="help"
+            android:icon="@drawable/help"
+            android:title="Help" />
+    </group>
+
+    <item android:title="Settings">
+        <menu>
+            <item
+                android:id="@+id/nav_share"
+                android:icon="@drawable/ic_menu_manage"
+                android:onClick="viewSettings"
+                android:title="FTP Settings" />
+            <item
+                android:id="@+id/nav_send"
+                android:icon="@drawable/ic_menu_send"
+                android:title="General Settings" />
+        </menu>
+    </item>
+
+</menu>

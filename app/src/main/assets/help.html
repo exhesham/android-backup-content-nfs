@@ -1,17 +1,23 @@
 <h1 style="text-align: center;"><strong>Help</strong></h1>
 <h2 style="text-align: center;"><strong>Sync Phone to FTP server</strong></h2>
-<h3 style="text-align: center;"><strong>Version 1</strong></h3>
+<h3 style="text-align: center;"><strong>Version&nbsp;2</strong></h3>
 <p>&nbsp;</p>
-<p>This Application aims to sync <strong>recursivly</strong> selected folders on your phone to an ftp server.</p>
+<p>This Application aims to sync <strong>recursivly</strong> selected folders on your phone to an ftp server. The files will be uploaded to the FTP into pre-defined folders. each extension will be put into a folder. the selected extensions and parallel folder names are configurable</p>
 <h2>Configure FTP:</h2>
 <p>Go to Settings by pressing the dots on the right of the toolbar</p>
 <p><img src="h1.png" alt="" /></p>
 <p>If your FTP server is not accessible from the outside, you can sync when you are inside the network.</p>
 <p>On next release, I will support sftp and ftps.</p>
+<h2>Configure&nbsp;Policies</h2>
+<p>You can configure the extensions and folders in the policy page. you can enter the policy page by pressing the button&nbsp;<img src="rules.png" alt="" />&nbsp;from the main toolbar.</p>
+<p>A Policy rule is made of extension and folder name.</p>
+<p>If you selected a folder to be uploaded to the FTP and it contains extensions that are not described in the policy, it will be ignored unless the default rule is set to a folder name and is not configured to ignore extensions.</p>
+<p>Here is an example of a policy rules:</p>
+<p><img src="policy_dashboard.png" alt="" /></p>
 <h2>Folder Sync</h2>
-<p>After Creating the FTP, you can go to the directories you want to sync and press the left cloud button <img src="unfollow.png" alt="" />&nbsp;on the toolbar so it converts to green <img src="follow.png" alt="" />.</p>
-<p>By doing that, the folder is added to the files that should be synced.</p>
-<p>Dont Forget to press the sync button&nbsp;<img src="add.png" alt="" /> in order to start syncing the folders you selected to be synced.</p>
+<p>After Creating the FTP, you can go to the directories you want to sync and press the left pin&nbsp;button <img src="unfollow.png" alt="" />&nbsp;on the toolbar so it converts to green <img src="follow.png" alt="" />.</p>
+<p>By doing that, the files in the folder are queued&nbsp;to the files that should be uploaded to the ftp server.</p>
+<p>Dont Forget to press the sync button&nbsp;<img src="sync_now.png" alt="" /> in order to start syncing the folders you selected to be synced. While syncing this icon will turn to green</p>
 <h2>Sync Rule</h2>
 <ul style="list-style-type: circle;">
     <li>In this version, the Sync is done each time you open the application or press the sync button&nbsp;<img src="add.png" alt="" /></li>
