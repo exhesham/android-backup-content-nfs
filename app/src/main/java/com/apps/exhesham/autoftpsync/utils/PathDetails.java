@@ -77,6 +77,21 @@ public class PathDetails {
     }
 
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PathDetails)) return false;
+
+        PathDetails that = (PathDetails) o;
+
+        return file != null ? file.getAbsolutePath().equals(that.file.getAbsolutePath()) : that.file == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return file != null ? file.hashCode() : 0;
+    }
 
     @Override
     public String toString() {

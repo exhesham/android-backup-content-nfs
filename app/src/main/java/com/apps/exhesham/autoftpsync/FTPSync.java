@@ -79,6 +79,7 @@ public class FTPSync extends AppCompatActivity {
         setContentView( R.layout.activity_ftpsync);
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
     }
 
 

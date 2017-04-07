@@ -36,11 +36,17 @@
 
         <service
             android:name=".MainActivity$FTPAPI"
-            android:exported="false" />
+            android:label=""
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.apps.exhesham.autoftpsync.MainActivity" />
+        </service>
 
         <activity
             android:name=".Help"
-            android:label="">
+            android:label=""
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.apps.exhesham.autoftpsync.MainActivity" />
@@ -48,11 +54,20 @@
         <activity
             android:name=".Rules"
             android:label="@string/title_activity_rules"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.apps.exhesham.autoftpsync.MainActivity" />
+        </activity>
         <activity
             android:name=".ListFollowedDirs"
             android:label="Pinned Folders"
-            android:parentActivityName=".MainActivity" />
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.apps.exhesham.autoftpsync.MainActivity" />
+        </activity>
         <activity
             android:name=".MainActivity"
             android:label="Sync Phone"

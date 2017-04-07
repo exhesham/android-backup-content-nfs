@@ -16,6 +16,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.StrictMode;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -24,6 +25,8 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.view.menu.ActionMenuItemView;
+import android.util.ArrayMap;
+import android.util.ArraySet;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -42,6 +45,7 @@ import com.apps.exhesham.autoftpsync.utils.FTPNode;
 import com.apps.exhesham.autoftpsync.utils.PathDetails;
 import com.apps.exhesham.autoftpsync.utils.Utils;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.json.JSONArray;
@@ -69,6 +73,8 @@ public class MainActivity extends AppCompatActivity
     static boolean isFtpSettingsCorrect = false;
     private Context context;
     static FTPNode ftpnode;
+    HashMap<String,Integer> total = new HashMap<>();
+    HashMap<String,Integer> total_sent = new HashMap<>();
 
     /*
     * All Icons are taken from https://www.iconfinder.com/iconsets/circle-icons-1
@@ -102,10 +108,92 @@ public class MainActivity extends AppCompatActivity
         requestPermissions();
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+
+        resetCounters();
         testFtpConnect(null);
+        setDefaultPaths();
         loadCategoriesContent();
     }
 
+    private void resetCounters() {
+        total.put(Constants.COMPRESSED_CATERGORY_NAME,0);
+        total.put(Constants.VIDEO_CATERGORY_NAME,0);
+        total.put(Constants.PHOTOS_CATERGORY_NAME,0);
+        total.put(Constants.DOCUMENTS_CATERGORY_NAME,0);
+        total.put(Constants.MUSIC_CATERGORY_NAME,0);
+        total.put(Constants.RECORDINGS_CATERGORY_NAME,0);
+
+        total_sent.put(Constants.COMPRESSED_CATERGORY_NAME,0);
+        total_sent.put(Constants.VIDEO_CATERGORY_NAME,0);
+        total_sent.put(Constants.PHOTOS_CATERGORY_NAME,0);
+        total_sent.put(Constants.DOCUMENTS_CATERGORY_NAME,0);
+        total_sent.put(Constants.MUSIC_CATERGORY_NAME,0);
+        total_sent.put(Constants.RECORDINGS_CATERGORY_NAME,0);
+    }
+
+    private void setDefaultPaths(){
+        String following_paths = Utils.getInstance(context).getConfigString("following_paths");
+        JSONArray ja;
+
+        ArrayMap<String,Boolean> am = new ArrayMap<>();
+        try {
+            ja = new JSONArray(following_paths);
+            for(int i=0;i<ja.length();i++){
+                try{
+                    //TODO:Make more efficient
+
+                    am.put(ja.getJSONObject(i).getString("path"),true);
+                }catch (Exception e){}
+            }
+
+
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            ja = new JSONArray();
+        }
+        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath();
+        if(!am.containsKey(path)){
+
+            ja.put(path);
+        }
+        path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath();
+        if(!am.containsKey(path)){
+            ja.put(path);
+        }
+        path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+        if(!am.containsKey(path)){
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+        }
+        path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath();
+        if(!am.containsKey(path)){
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+        }
+        path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath();
+        if(!am.containsKey(path)){
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+        }
+        path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_NOTIFICATIONS).getAbsolutePath();
+        if(!am.containsKey(path)){
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+        }
+        path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath();
+        if(!am.containsKey(path)){
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+        }
+        path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PODCASTS).getAbsolutePath();
+        if(!am.containsKey(path)){
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+        }
+        path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_RINGTONES).getAbsolutePath();
+        if(!
+                am.containsKey(path)){
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+        }
+        Utils.getInstance(context).storeConfigString("following_paths",ja.toString());
+
+
+    }
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -216,78 +304,50 @@ public class MainActivity extends AppCompatActivity
     }
     private void loadCategoriesContent(){
 
-//        ArrayList<ListFollowedDirs.FollowedDirDetails> data = new ArrayList<>();
-        final ListView listview = (ListView) findViewById(R.id.followed_dirs_listview);
-        HashMap<String,Integer> total = new HashMap<>();
-        HashMap<String,Integer> total_sent = new HashMap<>();
-        total.put(Constants.COMPRESSED_CATERGORY_NAME,0);
-        total.put(Constants.VIDEO_CATERGORY_NAME,0);
-        total.put(Constants.PHOTOS_CATERGORY_NAME,0);
-        total.put(Constants.DOCUMENTS_CATERGORY_NAME,0);
-        total.put(Constants.MUSIC_CATERGORY_NAME,0);
-        total.put(Constants.RECORDINGS_CATERGORY_NAME,0);
-
-        total_sent.put(Constants.COMPRESSED_CATERGORY_NAME,0);
-        total_sent.put(Constants.VIDEO_CATERGORY_NAME,0);
-        total_sent.put(Constants.PHOTOS_CATERGORY_NAME,0);
-        total_sent.put(Constants.DOCUMENTS_CATERGORY_NAME,0);
-        total_sent.put(Constants.MUSIC_CATERGORY_NAME,0);
-        total_sent.put(Constants.RECORDINGS_CATERGORY_NAME,0);
-
-//        String following_paths = Utils.getInstance(context).getConfigString("following_paths");
-//        JSONArray ja;
-//        try {
-//            ja = new JSONArray(following_paths);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//            ja = new JSONArray();
-//        }
-//        for (int i = 0; i < ja.length(); i++) {
-//            try {
-//                JSONObject jo = ja.getJSONObject(i);
-//                String status = jo.getString("status");
-//                if (!Constants.FOLLOWING_DIR.equals(status)) {
-//                    continue;
-//                }
-//                String pathname = jo.getString("path");
-//                Long lastUpdate = jo.getLong("date");
-//
-//
-//                ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(pathname);
-//
-//                for (final PathDetails pd : pda) {
-//
-//                    total[Utils.FileSysAPI.getFileCategory(pathname)]++;
-//                    int total_sent_ctr = total_sent[Utils.FileSysAPI.getFileCategory(pathname)];
-//                    total_sent[Utils.FileSysAPI.getFileCategory(pathname)] = Utils.getInstance(context).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENT) ? total_sent_ctr  + 1 : total_sent_ctr ;
-//                }
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//        }
 
 
-            String pathname = Constants.DEFAULT_PATH;
-
-
-
-            ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(pathname);
-
-            for (final PathDetails pd : pda) {
-                try {
-                    String categoryName = Utils.FileSysAPI.getFileCategory(pd.getFullpath());
-                    if(null == categoryName){
-                        continue;
-                    }
-                    total.put(categoryName,total.get(categoryName)+1);
-                    int total_sent_ctr = total_sent.get(categoryName);
-                    total_sent.put(categoryName, Utils.getInstance(context).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENT) ? total_sent_ctr  + 1 : total_sent_ctr) ;
-                } catch (Exception e) {
-                    e.printStackTrace();
+        String following_paths = Utils.getInstance(context).getConfigString("following_paths");
+        JSONArray ja;
+        try {
+            ja = new JSONArray(following_paths);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            ja = new JSONArray();
+        }
+        for (int i = 0; i < ja.length(); i++) {
+            try {
+                JSONObject jo = ja.getJSONObject(i);
+                String status = jo.getString("status");
+                if (!Constants.FOLLOWING_DIR.equals(status)) {
+                    continue;
                 }
-            }
+                String pathname = jo.getString("path");
+                Long lastUpdate = jo.getLong("date");
+                ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(pathname);
 
-        //TODO:After calculating the results, assign them to the fields
+                for (final PathDetails pd : pda) {
+                    try {
+                        String categoryName = Utils.FileSysAPI.getFileCategory(pd.getFullpath());
+                        if(null == categoryName){
+                            continue;
+                        }
+                        total.put(categoryName,total.get(categoryName)+1);
+                        int total_sent_ctr = total_sent.get(categoryName);
+                        total_sent.put(categoryName, Utils.getInstance(context).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENT) ? total_sent_ctr  + 1 : total_sent_ctr) ;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        updateCounters();
+
+    }
+
+    private void updateCounters() {
+
         TextView video_total_files = (TextView) findViewById(R.id.video_total_files);
         TextView video_total_sent_files = (TextView) findViewById(R.id.video_total_synced_files);
         video_total_files.setText("Total: " + total.get(Constants.VIDEO_CATERGORY_NAME));
@@ -323,8 +383,8 @@ public class MainActivity extends AppCompatActivity
 //        TextView apk_total_sent_files = (TextView) findViewById(R.id.apk_total_synced_files);
 //        apk_total_files.setText("Total: " + total.get(Constants.));
 //        apk_total_sent_files.setText("Synced: " + total_sent.get(Constants.VIDEO_CATERGORY_NAME));
-
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -501,6 +561,18 @@ public class MainActivity extends AppCompatActivity
         }
         return jo.toString();
     }
+    private JSONObject generateJsonStatus(String status,String path) {
+        JSONObject jo = new JSONObject();
+        try {
+            jo.put("date",System.currentTimeMillis());
+            jo.put("status",status);
+            jo.put("path",path);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jo;
+    }
 
 
     public class ResponseReceiver extends BroadcastReceiver
@@ -533,10 +605,19 @@ public class MainActivity extends AppCompatActivity
             }
             while (iter.hasNext()) {
                 String filename = iter.next();
-                Utils.getInstance(context).storeConfigString(filename, generateStatus(b.getString(filename),filename));
+                String status = b.getString(filename);
+                Utils.getInstance(context).storeConfigString(filename, generateStatus(status,filename));
+                if(Constants.STATUS_SENT.equals(status)){
+                    //Update Counters
+                    String categoryName = Utils.FileSysAPI.getFileCategory(filename);
+                    if(null != categoryName) {
+                        total.put(categoryName, total.get(categoryName) + 1);
+                        int total_sent_ctr = total_sent.get(categoryName);
+                        total_sent.put(categoryName, Utils.getInstance(context).getPathStatus(filename).equals(Constants.STATUS_SENT) ? total_sent_ctr + 1 : total_sent_ctr);
+                    }
+                }
             }
-            //TODO: Select to update counters only....
-            loadCategoriesContent();
+            updateCounters();
         }
     }
     private void shouldStartRotatingIcon(final boolean start){
@@ -584,11 +665,12 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onHandleIntent(Intent workIntent)  {
-            final  String filepath = workIntent.getStringExtra("full-path");
-            final  String dstfolder = workIntent.getStringExtra("dst-dir");
+            final  ArrayList<CharSequence> fileSrcPaths = workIntent.getCharSequenceArrayListExtra("full-src-paths");
+            final  ArrayList<CharSequence> fileDstPaths = workIntent.getCharSequenceArrayListExtra("full-dst-paths");
+
 
             FTPClient con = null;
-            updateStatus(filepath,Constants.STATUS_CONNECTING);
+
             try
             {
                 con = new FTPClient();
@@ -603,43 +685,74 @@ public class MainActivity extends AppCompatActivity
                         con.enterLocalActiveMode();
                     }
                     con.setFileType(FTP.BINARY_FILE_TYPE);
-                    Log.v("onHandleIntent","Will cd to path " + dstfolder);
                     con.setControlKeepAliveTimeout(600);
                     con.setDataTimeout(1600);
                     con.setConnectTimeout(1600);
-                    ftpCreateDirectoryTree(con,dstfolder);
-                    Log.v("onHandleIntent","navigating to dir passed successfully!");
-                    con.changeWorkingDirectory(dstfolder);
-                    String data = filepath;
-                    Log.v("FTPAPI",con.getStatus());
-                    FileInputStream in = new FileInputStream(new File(data));
-                    updateStatus(filepath,Constants.STATUS_SENDING);
-                    boolean result = con.storeFile(new File(data).getName(), in);
-                    Log.v("send",Integer.toString(con.getReplyCode()));
-                    Log.v("send",con.getReplyString());
-                    in.close();
-                    if (result){
-                        updateStatus(filepath,Constants.STATUS_SENT);
-                        totalFilesAlreadySent++;
+
+                    for(int i = 0; i<fileSrcPaths.size();i++) {
+                        totalHandled++;
+                        String dstfolder = fileDstPaths.get(i).toString();
+                        String filepath = fileSrcPaths.get(i).toString();
+                        Log.v("onHandleIntent", "Will cd to path " + dstfolder);
+                        boolean result;
+
+                        try {
+                            if(con.listFiles(dstfolder+"/"+ FilenameUtils.getName(filepath)).length>0){
+                                updateStatus(filepath, Constants.STATUS_SENT);
+                                totalFilesAlreadySent++;
+                                continue;
+                            }
+                            ftpCreateDirectoryTree(con, dstfolder);
+                            Log.v("onHandleIntent", "navigating to dir passed successfully!");
+                            con.changeWorkingDirectory(dstfolder);
+                            String data = filepath;
+                            Log.v("FTPAPI", con.getStatus());
+                            FileInputStream in = new FileInputStream(new File(data));
+                            updateStatus(filepath, Constants.STATUS_SENDING);
+                            result = con.storeFile(new File(data).getName(), in);
+                            Log.v("send", Integer.toString(con.getReplyCode()));
+                            Log.v("send", con.getReplyString());
+                            in.close();
+                        }catch (Exception ex){
+                            updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
+                            continue;
+                        }
+                        if (result) {
+                            updateStatus(filepath, Constants.STATUS_SENT);
+                            totalFilesAlreadySent++;
+                            Thread.sleep(10);
 //                        uploadFailing = false;
-                    }else{
-                        updateStatus(filepath,Constants.STATUS_SENDING_FAILED);
+                        } else {
+                            updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
 //                        uploadFailing = true;
+                        }
+
                     }
                     con.logout();
                     con.disconnect();
                 }else{
-                    updateStatus(filepath,Constants.STATUS_FAILED_LOGIN);
+                    for(int i = 0; i<fileSrcPaths.size();i++) {
+                        String filepath = fileSrcPaths.get(i).toString();
+                        updateStatus(filepath, Constants.STATUS_FAILED_LOGIN);
+                        totalHandled++;
+                    }
                 }
             }
             catch (Exception e)
             {
-                updateStatus(filepath,Constants.STATUS_FAILED_CONNECTING);
+                for(int i = 0; i<fileSrcPaths.size();i++) {
+                    String filepath = fileSrcPaths.get(i).toString();
+                    updateStatus(filepath,Constants.STATUS_FAILED_CONNECTING);
+                    totalHandled++;
+                }
+
                 e.printStackTrace();
 //                uploadFailing = true;
             }
-            totalHandled++;
+
         } // onHandleIntent
+
+
 
     }
 
@@ -707,7 +820,43 @@ public class MainActivity extends AppCompatActivity
         return 0;
     }
 
+    private int sendFiles(ArraySet<PathDetails> pdArr) {
+        ArrayList<CharSequence> fullSrcPaths = new ArrayList<>();
+        ArrayList<CharSequence> fullDstPaths = new ArrayList<>();
+        if(ftpnode == null){
+            ftpnode = Utils.getInstance(context).getFTPSettings();
+        }
+        if(ftpnode == null){
+            return -1;
+        }
+        for(PathDetails pd : pdArr){
+
+            String calculatedPath = pd.genPathRelativeToDepth();
+            if(calculatedPath == null){
+                Log.v("SendFile","The file is ignored:"+pd.getFullpath());
+                continue;
+            }
+            fullSrcPaths.add(pd.getFullpath());
+            fullDstPaths.add(ftpnode.getDefaultPath() + "/" + calculatedPath);
+            totalFilesShouldBeSent++;
+        }
+        try{
+            Intent mServiceIntent = new Intent(context, FTPAPI.class);
+            mServiceIntent.putCharSequenceArrayListExtra("full-src-paths",fullSrcPaths);
+            mServiceIntent.putCharSequenceArrayListExtra("full-dst-paths",fullDstPaths);
+
+            context.startService(mServiceIntent);
+
+        }catch (Exception e){
+            e.printStackTrace();
+            return -2;
+        }
+        return 0;
+    }
+
+
     private void scanDirectoriesOnDemand(){
+        ArraySet<PathDetails> filesToSend = new ArraySet<>();
         ftpnode = Utils.getInstance(context).getFTPSettings();
         if(isFtpSettingsCorrect == false){
             return;
@@ -745,18 +894,7 @@ public class MainActivity extends AppCompatActivity
                                 ) && ! isTimeout(jo.getLong("date"))){
                             continue;
                         }else{
-                            int res = sendFile(pd);
-                            if(res == -1){
-                                Utils.getInstance(context).showAlert(
-                                        "Please go to Settings and configure your FTP",
-                                        "No FTP Configured",
-                                        false);
-                                shouldStartRotatingIcon(false);
-                                return;
-                            }
-                            if(res == 0){
-                                totalFilesShouldBeSent++;
-                            }
+                            filesToSend.add(pd);
                         }
                     }
 
@@ -766,6 +904,7 @@ public class MainActivity extends AppCompatActivity
                 e.printStackTrace();
             }
         }
+        sendFiles(filesToSend);
         if(totalFilesShouldBeSent == 0){
             shouldStartRotatingIcon(false);
         }

@@ -29,6 +29,7 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import com.apps.exhesham.autoftpsync.utils.Constants;
 import com.apps.exhesham.autoftpsync.utils.Utils;
 
 import org.apache.commons.io.FilenameUtils;
@@ -68,6 +69,7 @@ public class Rules extends AppCompatActivity {
             }
         });
         displayRulesOnTable();
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -79,21 +81,33 @@ public class Rules extends AppCompatActivity {
     private ArrayMap<String,String> readRules(){
         String rules_str = Utils.getInstance(context).getConfigString("rules");
         JSONArray ja;
+        boolean shouldUpdateDB = false;
         try {
             ja = new JSONArray(rules_str);
         } catch (JSONException e) {
-            e.printStackTrace();
+
             ja = new JSONArray();
+            shouldUpdateDB = true;
         }
         if(ja.length() == 0){
             try {
-                ja.put(new JSONObject().put("extension","png").put("folder_name","photos"));
-                ja.put(new JSONObject().put("extension","jpeg").put("folder_name","photos"));
-                ja.put(new JSONObject().put("extension","jpg").put("folder_name","photos"));
-                ja.put(new JSONObject().put("extension","mp3").put("folder_name","music"));
-                ja.put(new JSONObject().put("extension","mp4").put("folder_name","videos"));
-                ja.put(new JSONObject().put("extension","pdf").put("folder_name","documents"));
-                ja.put(new JSONObject().put("extension","*").put("folder_name","others"));
+                for(String ext : Constants.PHOTOS_CATERGORY_EXTS){
+                    ja.put(new JSONObject().put("extension",ext).put("folder_name","photos"));
+                }
+                for(String ext : Constants.COMPRESSED_CATERGORY_EXTS){
+                    ja.put(new JSONObject().put("extension",ext).put("folder_name","compressed"));
+                }
+                for(String ext : Constants.DOCUMENTS_CATERGORY_EXTS){
+                    ja.put(new JSONObject().put("extension",ext).put("folder_name","documents"));
+                }
+                for(String ext : Constants.MUSIC_CATERGORY_EXTS){
+                    ja.put(new JSONObject().put("extension",ext).put("folder_name","music"));
+                }
+                for(String ext : Constants.VIDEO_CATERGORY_EXTS){
+                    ja.put(new JSONObject().put("extension",ext).put("folder_name","videos"));
+                }
+
+//                ja.put(new JSONObject().put("extension","*").put("folder_name","others"));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -107,6 +121,9 @@ public class Rules extends AppCompatActivity {
             } catch (JSONException e) {
                 continue;
             }
+        }
+        if(shouldUpdateDB){
+            Utils.getInstance(context).storeConfigString("rules",ja.toString());
         }
         return  rules;
     }

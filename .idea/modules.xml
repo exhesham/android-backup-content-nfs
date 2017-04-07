@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/AutoFtpSync.iml" filepath="$PROJECT_DIR$/AutoFtpSync.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/commons-net-3.5/commons-net-3.5.iml" filepath="$PROJECT_DIR$/commons-net-3.5/commons-net-3.5.iml" />
+    </modules>
+  </component>
+</project>

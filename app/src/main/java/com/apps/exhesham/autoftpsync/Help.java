@@ -11,6 +11,7 @@ public class Help extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_help);
         WebView lWebView = (WebView)findViewById(R.id.webView);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
         lWebView.loadUrl("file:///android_asset/help.html");
     }
 }
