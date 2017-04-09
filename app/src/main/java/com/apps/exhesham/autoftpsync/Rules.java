@@ -1,30 +1,21 @@
 package com.apps.exhesham.autoftpsync;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.InputType;
-import android.util.ArraySet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.RadioGroup;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -36,23 +27,22 @@ import org.apache.commons.io.FilenameUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
-import java.util.Set;
+import java.util.Arrays;
 
 
 public class Rules extends AppCompatActivity {
     private Context context;
 
-    public ArrayMap<String,String> getRules() {
-        if(_rules == null){
+    public ArrayMap<String,String> getFollowedRules() {
+        if(_followed_rules == null){
             Log.v("read rules", " Reading rules");
-            _rules = readRules();
+            _followed_rules = readRules();
         }
-        return _rules;
+        return _followed_rules;
     }
 
-    private static ArrayMap<String,String> _rules;
+    private static ArrayMap<String,String> _followed_rules;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,32 +69,33 @@ public class Rules extends AppCompatActivity {
     }
 
     private ArrayMap<String,String> readRules(){
-        String rules_str = Utils.getInstance(context).getConfigString("rules");
-        JSONArray ja;
         boolean shouldUpdateDB = false;
-        try {
-            ja = new JSONArray(rules_str);
-        } catch (JSONException e) {
-
+        JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB("rules");
+        JSONObject version =  Utils.getInstance(context).getJsonObjFromDB("following_paths");
+        if(version == null || ja.length() == 0){
+            /*If the version is not identified then for sure it is not version 3, then reformat the available data*/
             ja = new JSONArray();
             shouldUpdateDB = true;
         }
         if(ja.length() == 0){
             try {
                 for(String ext : Constants.PHOTOS_CATERGORY_EXTS){
-                    ja.put(new JSONObject().put("extension",ext).put("folder_name","photos"));
+                    ja.put(new JSONObject().put("extension",ext).put("folder_name","photos").put("status",Constants.FOLLOWING_DIR).put("category","photos"));
                 }
                 for(String ext : Constants.COMPRESSED_CATERGORY_EXTS){
-                    ja.put(new JSONObject().put("extension",ext).put("folder_name","compressed"));
+                    ja.put(new JSONObject().put("extension",ext).put("folder_name","compressed").put("status",Constants.FOLLOWING_DIR).put("category","compressed"));
                 }
                 for(String ext : Constants.DOCUMENTS_CATERGORY_EXTS){
-                    ja.put(new JSONObject().put("extension",ext).put("folder_name","documents"));
+                    ja.put(new JSONObject().put("extension",ext).put("folder_name","documents").put("status",Constants.FOLLOWING_DIR).put("category","documents"));
                 }
                 for(String ext : Constants.MUSIC_CATERGORY_EXTS){
-                    ja.put(new JSONObject().put("extension",ext).put("folder_name","music"));
+                    ja.put(new JSONObject().put("extension",ext).put("folder_name","music").put("status",Constants.FOLLOWING_DIR).put("category","music"));
                 }
                 for(String ext : Constants.VIDEO_CATERGORY_EXTS){
-                    ja.put(new JSONObject().put("extension",ext).put("folder_name","videos"));
+                    ja.put(new JSONObject().put("extension",ext).put("folder_name","videos").put("status",Constants.FOLLOWING_DIR).put("category","videos"));
+                }
+                for(String ext : Constants.APPS_CATERGORY_EXTS){
+                    ja.put(new JSONObject().put("extension",ext).put("folder_name","apps").put("status",Constants.FOLLOWING_DIR).put("category","apps"));
                 }
 
 //                ja.put(new JSONObject().put("extension","*").put("folder_name","others"));
@@ -117,7 +108,13 @@ public class Rules extends AppCompatActivity {
             try {
                 String foldername = ja.getJSONObject(i).getString("folder_name");
                 String extension = ja.getJSONObject(i).getString("extension");
-                rules.put(extension,foldername);
+                if(!ja.getJSONObject(i).has("status")){
+                    ja.getJSONObject(i).put("status",Constants.FOLLOWING_DIR);
+                }
+                String status = ja.getJSONObject(i).getString("status");
+                if(Constants.FOLLOWING_DIR.equals(status)){
+                    rules.put(extension,foldername);
+                }
             } catch (JSONException e) {
                 continue;
             }
@@ -130,18 +127,54 @@ public class Rules extends AppCompatActivity {
 
     public void deleteRules(MenuItem item){
         TableLayout ll = (TableLayout) findViewById(R.id.table_rules);
+        boolean showAlert = false;
         for(Integer index : checked_boxes.keySet()){
             if(checked_boxes.get(index) == true) {
                 TableRow tr = (TableRow) ll.getChildAt(index);
                 String extension = ((TextView) tr.getChildAt(1)).getText().toString();
-                getRules().remove(extension);
+                if(isFixedExtension(extension)){
+                    showAlert = true;
+                    continue;
+                }
+                getFollowedRules().remove(extension);
             }
         }
+
         saveChanges(null);
+        _followed_rules = null;
         displayRulesOnTable();
+        if(showAlert){
+            Utils.getInstance(context).showAlert("You cannot delete fixed extensions","Delete Fixed Extensions", false);
+        }
     }
+
+    private boolean isFixedExtension(String extension) {
+        if(Arrays.asList(Constants.COMPRESSED_CATERGORY_EXTS).contains(extension)){
+            return true;
+        }
+        if(Arrays.asList(Constants.DOCUMENTS_CATERGORY_EXTS).contains(extension)){
+            return true;
+        }
+        if(Arrays.asList(Constants.RECORDING_CATERGORY_EXTS).contains(extension)){
+            return true;
+        }
+        if(Arrays.asList(Constants.MUSIC_CATERGORY_EXTS).contains(extension)){
+            return true;
+        }
+        if(Arrays.asList(Constants.PHOTOS_CATERGORY_EXTS).contains(extension)){
+            return true;
+        }
+        if(Arrays.asList(Constants.VIDEO_CATERGORY_EXTS).contains(extension)){
+            return true;
+        }
+        if(Arrays.asList(Constants.APPS_CATERGORY_EXTS).contains(extension)){
+            return true;
+        }
+        return false;
+    }
+
     public void saveChanges(MenuItem item){
-        ArrayMap<String,String> rules = getRules();
+        ArrayMap<String,String> rules = getFollowedRules();
 
         JSONArray ja = new JSONArray();
         for (String key : rules.keySet()) {
@@ -166,7 +199,7 @@ public class Rules extends AppCompatActivity {
     private static int selected_row = 1;
     private static ArrayMap<Integer, Boolean> checked_boxes = new ArrayMap<Integer, Boolean>();
     private void displayRulesOnTable(){
-        ArrayMap<String, String> rules = getRules();
+        ArrayMap<String, String> rules = getFollowedRules();
 
         final TableLayout ll = (TableLayout) findViewById(R.id.table_rules);
 //        ll.removeAllViews();
@@ -287,21 +320,21 @@ public class Rules extends AppCompatActivity {
                 String newRuleExtension = extensionField.getText().toString();
                 String newRuleFolder = folderField.getText().toString();
                 if("ALL THE REST".equals(extension)){
-                    if(getRules().containsKey("*")){
-                        getRules().remove("*");
+                    if(getFollowedRules().containsKey("*")){
+                        getFollowedRules().remove("*");
                     }
                     if(ignoreOthers.isChecked()){
-                        getRules().put("*","<IGNORE FILE>");
+                        getFollowedRules().put("*","<IGNORE FILE>");
                     }else{
-                        getRules().put("*",newRuleFolder);
+                        getFollowedRules().put("*",newRuleFolder);
                     }
 
                 }else{
                     if(!newRuleExtension.equals("") && !newRuleFolder.equals("")){
-                        if(getRules().containsKey(extension)){
-                            getRules().remove(extension);
+                        if(getFollowedRules().containsKey(extension)){
+                            getFollowedRules().remove(extension);
                         }
-                        getRules().put(newRuleExtension,newRuleFolder);
+                        getFollowedRules().put(newRuleExtension,newRuleFolder);
                     }
                 }
                 saveChanges(null);

@@ -53,14 +53,9 @@ public class ListFollowedDirs extends AppCompatActivity {
         ArrayList<FollowedDirDetails> data = new ArrayList<>();
         final ListView listview = (ListView) findViewById(R.id.followed_dirs_listview);
 
-        String following_paths = Utils.getInstance(context).getConfigString("following_paths");
-        JSONArray ja;
-        try {
-            ja = new JSONArray(following_paths);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            ja = new JSONArray();
-        }
+
+        JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB("following_paths");
+
         for (int i = 0; i < ja.length(); i++) {
             try {
                 JSONObject jo = ja.getJSONObject(i);
@@ -69,12 +64,22 @@ public class ListFollowedDirs extends AppCompatActivity {
                     continue;
                 }
                 String pathname = jo.getString("path");
-                Long lastUpdate = jo.getLong("date");
+                ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(pathname);
+                if (null == pda) {
+                    continue;
+                }
+
+                boolean isDefault = false;
+                if(jo.has("status")) {
+                    isDefault = jo.getBoolean("default");
+                }
                 FollowedDirDetails currPath = new FollowedDirDetails();
                 currPath.setFullPath(pathname);
-                ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(pathname);
+                currPath.setIsDefault(isDefault);
+
                 int total_sent = 0;
                 int total = 0;
+
                 for (final PathDetails pd : pda) {
                     total++;
                     total_sent = Utils.getInstance(context).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENT) ? total_sent + 1 : total_sent;
@@ -159,8 +164,12 @@ public class ListFollowedDirs extends AppCompatActivity {
             convertView.setBackgroundColor(colors[colorPos]);
 
             // set the image
-            ImageView img = (ImageView) convertView.findViewById(R.id.imgStatus);
-            img.setImageResource(R.drawable.delete);
+            ImageView img = (ImageView) convertView.findViewById(R.id.photos_status);
+            if(data[position].isDefault()){
+                img.setImageResource(R.drawable.cant_delete);
+            }else{
+                img.setImageResource(R.drawable.delete);
+            }
             img.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -178,6 +187,12 @@ public class ListFollowedDirs extends AppCompatActivity {
         private String fullpath;
         private int totalRelevantFiles;
         private int totalSentFiles;
+
+        public boolean isDefault() {
+            return isDefault;
+        }
+
+        private boolean isDefault;
 
 
         public String getFullpath() {
@@ -202,6 +217,10 @@ public class ListFollowedDirs extends AppCompatActivity {
 
         public int getTotalSentFiles() {
             return totalSentFiles;
+        }
+
+        public void setIsDefault(boolean isDefault) {
+            this.isDefault = isDefault;
         }
     }
 }

@@ -85,7 +85,13 @@ public class Utils {
                             dialog.dismiss();
                         }
                     });
-            alertDialog.show();
+            try{
+                alertDialog.show();
+            }catch (Exception e){
+                e.printStackTrace();
+                return null;
+            }
+
             return input.getText().toString();
         }catch (Exception e){
             e.printStackTrace();
@@ -106,6 +112,7 @@ public class Utils {
         return jo.toString();
     }
     public String getPathStatus(String path) {
+        //TODO:Should check if parent path is synced
         if(path.endsWith("/")){
             path = path.substring(0, path.length()-1);
         }
@@ -114,6 +121,19 @@ public class Utils {
             return Constants.STATUS_NOTHING;
         }
         JSONObject jo;
+//        JSONArray ja = getJsonArrayFromDB("following_paths")
+//        for(int i=0;i<ja.length();i++){
+//            try {
+//                if(ja.getJSONObject(i).getString("path").equals(currPath)){
+//                    ja.remove(i);
+//                    i= i==0?i:i-1;
+//
+//                }
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//        }
+
         try {
             jo = new JSONObject(following_path);
             return jo.getString("status");
@@ -125,14 +145,7 @@ public class Utils {
     public void convertFollowStateInDB(String currPath) {
 
         String status = getPathStatus(currPath);
-        String following_paths = getConfigString("following_paths");
-        JSONArray ja;
-        try {
-            ja = new JSONArray(following_paths);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            ja = new JSONArray();
-        }
+        JSONArray ja = getJsonArrayFromDB("following_paths");
 
         if(status.equals(Constants.FOLLOWING_DIR)){
 
@@ -141,9 +154,9 @@ public class Utils {
             for(int i=0;i<ja.length();i++){
                 try {
                     if(ja.getJSONObject(i).getString("path").equals(currPath)){
-
                         ja.remove(i);
-                        break;
+                        i= i==0?i:i-1;
+
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -179,6 +192,67 @@ public class Utils {
 
     }
 
+    public JSONArray  getJsonArrayFromDB(String key) {
+        String following_paths = getConfigString(key);
+        JSONArray ja;
+        try {
+            ja = new JSONArray(following_paths);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            ja = new JSONArray();
+        }
+        return  ja;
+    }
+    public JSONObject  getJsonObjFromDB(String key) {
+        String  joStr = getConfigString(key);
+        JSONObject ja;
+        try {
+            ja = new JSONObject(joStr);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return  ja;
+    }
+
+    /***
+     * convert state of category
+     * @param categoryKey the category key as appears in the database
+     * @return true if the new state of the category is followed. false otherwise
+     */
+    public boolean convertCategoryStateInDB(String categoryKey) {
+        JSONArray ja = getJsonArrayFromDB("rules");
+        JSONObject jo = getJsonObjFromDB("categories");
+        boolean shouldFollow = false;
+        if(jo != null){
+            try {
+                String catStatus  = jo.getJSONObject(categoryKey).getString("status");
+                if(catStatus.equals(Constants.FOLLOWING_DIR)){
+                    jo.getJSONObject(categoryKey).put("status",Constants.NOT_FOLLOWING_DIR);
+                    shouldFollow = false;
+                }else{
+                    jo.getJSONObject(categoryKey).put("status",Constants.FOLLOWING_DIR);
+                    shouldFollow = true;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            storeConfigString("categories", jo.toString());
+        }
+        for(int i = 0;i<ja.length();i++){
+            try {
+                if(ja.getJSONObject(i).getString("category").equals(categoryKey)){
+                    ja.getJSONObject(i).put("status", shouldFollow ? Constants.FOLLOWING_DIR: Constants.NOT_FOLLOWING_DIR);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        storeConfigString("rules",ja.toString());
+
+        return  shouldFollow ;
+    }
+
     public static class FileSysAPI {
         private static ArrayList<PathDetails> getFoldersRecursiveAux(String path, int depth){
             ArrayList pdArray = new ArrayList<>();
@@ -201,7 +275,7 @@ public class Utils {
         }
         public static ArrayList<PathDetails> getFoldersRecursive(String path){
             if(!isPathExist(path)){
-                return null;
+                return new ArrayList<>();
             }
             return getFoldersRecursiveAux(path,0);
         }
@@ -243,6 +317,9 @@ public class Utils {
             }
             if(Arrays.asList(Constants.COMPRESSED_CATERGORY_EXTS).contains(extension)){
                 return Constants.COMPRESSED_CATERGORY_NAME;
+            }
+            if(Arrays.asList(Constants.APPS_CATERGORY_EXTS).contains(extension)){
+                return Constants.APPS_CATERGORY_NAME;
             }
             return null;
         }

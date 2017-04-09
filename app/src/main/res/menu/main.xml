@@ -8,10 +8,21 @@
         app:showAsAction="always">
 
     </item>
+
+    <item android:id="@+id/follow_srefresh"
+        android:icon="@drawable/refresh_table"
+        android:title="Refresh"
+        android:onClick="refreshCategory"
+        app:showAsAction="always">
+
+    </item>
+
+
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:onClick="viewSettings"
         android:title="FTP Settings"
         app:showAsAction="never" />
+
 </menu>

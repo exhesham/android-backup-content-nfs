@@ -80,6 +80,7 @@ public class FTPSync extends AppCompatActivity {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
+        fillTable(Constants.DEFAULT_PATH);
     }
 
 
@@ -193,7 +194,7 @@ public class FTPSync extends AppCompatActivity {
 
 
     private void updateToolbarSyncButton(String path) {
-        //TODO:Should check if parent path is synced
+
         String status = Utils.getInstance(context).getPathStatus(path);
 
         ActionMenuItemView iv = (ActionMenuItemView )findViewById(R.id.toolbtn_is_following);
@@ -201,46 +202,40 @@ public class FTPSync extends AppCompatActivity {
             Log.e("updateToolbarSyncButton","cannot find toolbtn_is_following!");
             return;
         }
-        Drawable myIcon = getResources().getDrawable( R.drawable.unfollow ,null);
+        Drawable followIcon= getResources().getDrawable( R.drawable.follow ,null);
+        Drawable unfollowIcon= getResources().getDrawable( R.drawable.unfollow ,null);
         try {
-
-
             if (status.equals(Constants.FOLLOWING_DIR)) {
-                myIcon = getResources().getDrawable(R.drawable.follow, null);
+                iv.setIcon(followIcon);
                 iv.setTitle(Constants.FOLLOWING_DIR);
             } else {
-
+                iv.setIcon(unfollowIcon);
                 iv.setTitle(Constants.NOT_FOLLOWING_DIR);
             }
         }catch (Exception e){
             e.printStackTrace();
         }
-        iv.setIcon(myIcon);
+
     }
 
 
 
     public void handleFollowStatus(MenuItem item) {
-        if(ftpnode == null){
-            Utils.getInstance(context).showAlert(
-                    "Please go to Settings and configure your FTP",
-                    "No FTP Configured",
-                    false);
-            return;
-        }
         /* Update The database */
-        Utils.getInstance(context).convertFollowStateInDB(currPath);
         String status = Utils.getInstance(context).getPathStatus(currPath);
+        Utils.getInstance(context).convertFollowStateInDB(currPath);
         ActionMenuItemView  iv = (ActionMenuItemView )findViewById(R.id.toolbtn_is_following);
-        Drawable myIcon = getResources().getDrawable( R.drawable.follow ,null);
+        Drawable followIcon= getResources().getDrawable( R.drawable.follow ,null);
+        Drawable unfollowIcon= getResources().getDrawable( R.drawable.unfollow ,null);
         if(status.equals(Constants.FOLLOWING_DIR)){
             /*if you were following the dir and pressed the button then now you are not following it*/
-            myIcon = getResources().getDrawable( R.drawable.unfollow ,null);
             iv.setTitle(Constants.NOT_FOLLOWING_DIR);
+            iv.setIcon(unfollowIcon);
         }else{
             iv.setTitle(Constants.FOLLOWING_DIR);
+            iv.setIcon(followIcon);
         }
-        iv.setIcon(myIcon);
+
     }
 
 

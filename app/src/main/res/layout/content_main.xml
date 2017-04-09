@@ -54,7 +54,7 @@
                         android:ellipsize="end"
                         android:id="@+id/firstLine"
                         android:layout_toRightOf="@+id/icon"
-                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:layout_toLeftOf="@+id/photos_status"
                         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                         android:textColor="@android:color/black" />
 
@@ -70,7 +70,7 @@
                             android:id="@+id/photos_total_synced_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.79" />
 
                         <TextView
@@ -80,7 +80,7 @@
                             android:id="@+id/photos_total_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.69" />
 
                     </LinearLayout>
@@ -89,15 +89,17 @@
             </LinearLayout>
 
             <ImageView
-                android:layout_width="20dp"
+                android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
-                android:id="@+id/imgStatus"
+                android:id="@+id/photos_status"
                 android:layout_alignParentStart="false"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentLeft="false"
                 android:layout_alignParentTop="true"
-                android:src="@drawable/unfollow" />
+                android:src="@drawable/unfollow"
+                android:onClick="followCategory"
+                android:tag="photos" />
         </LinearLayout>
 
 
@@ -139,7 +141,7 @@
                         android:ellipsize="end"
                         android:id="@+id/video_firstLine"
                         android:layout_toRightOf="@+id/icon"
-                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:layout_toLeftOf="@+id/photos_status"
                         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                         android:textColor="@android:color/black" />
 
@@ -155,7 +157,7 @@
                             android:id="@+id/video_total_synced_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.79" />
 
                         <TextView
@@ -165,7 +167,7 @@
                             android:id="@+id/video_total_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.69" />
 
                     </LinearLayout>
@@ -174,7 +176,7 @@
             </LinearLayout>
 
             <ImageView
-                android:layout_width="20dp"
+                android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:id="@+id/video_status"
                 android:layout_alignParentStart="false"
@@ -182,7 +184,9 @@
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentLeft="false"
                 android:layout_alignParentTop="true"
-                android:src="@drawable/unfollow" />
+                android:onClick="followCategory"
+                android:src="@drawable/unfollow"
+                android:tag="videos" />
         </LinearLayout>
 
 
@@ -220,7 +224,7 @@
                         android:ellipsize="end"
                         android:id="@+id/music_firstLine"
                         android:layout_toRightOf="@+id/icon"
-                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:layout_toLeftOf="@+id/photos_status"
                         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                         android:textColor="@android:color/black" />
 
@@ -236,7 +240,7 @@
                             android:id="@+id/music_total_synced_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.79" />
 
                         <TextView
@@ -246,7 +250,7 @@
                             android:id="@+id/music_total_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.69" />
 
                     </LinearLayout>
@@ -255,7 +259,7 @@
             </LinearLayout>
 
             <ImageView
-                android:layout_width="20dp"
+                android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:id="@+id/music_status"
                 android:layout_alignParentStart="false"
@@ -263,7 +267,9 @@
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentLeft="false"
                 android:layout_alignParentTop="true"
-                android:src="@drawable/unfollow" />
+                android:src="@drawable/unfollow"
+                android:onClick="followCategory"
+                android:tag="music" />
         </LinearLayout>
 
 
@@ -301,7 +307,7 @@
                         android:ellipsize="end"
                         android:id="@+id/compressed_firstLine"
                         android:layout_toRightOf="@+id/icon"
-                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:layout_toLeftOf="@+id/photos_status"
                         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                         android:textColor="@android:color/black" />
 
@@ -317,7 +323,7 @@
                             android:id="@+id/compressed_total_synced_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.79" />
 
                         <TextView
@@ -327,7 +333,7 @@
                             android:id="@+id/compressed_total_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.69" />
 
                     </LinearLayout>
@@ -336,7 +342,7 @@
             </LinearLayout>
 
             <ImageView
-                android:layout_width="20dp"
+                android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:id="@+id/compressed_status"
                 android:layout_alignParentStart="false"
@@ -344,7 +350,9 @@
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentLeft="false"
                 android:layout_alignParentTop="true"
-                android:src="@drawable/unfollow" />
+                android:src="@drawable/unfollow"
+                android:onClick="followCategory"
+                android:tag="compressed" />
         </LinearLayout>
 
 
@@ -386,7 +394,7 @@
                         android:ellipsize="end"
                         android:id="@+id/recordings_firstLine"
                         android:layout_toRightOf="@+id/icon"
-                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:layout_toLeftOf="@+id/photos_status"
                         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                         android:textColor="@android:color/black" />
 
@@ -402,7 +410,7 @@
                             android:id="@+id/recordings_total_synced_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.79" />
 
                         <TextView
@@ -412,7 +420,7 @@
                             android:id="@+id/recordings_total_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.69" />
 
                     </LinearLayout>
@@ -421,7 +429,7 @@
             </LinearLayout>
 
             <ImageView
-                android:layout_width="20dp"
+                android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:id="@+id/recordings_status"
                 android:layout_alignParentStart="false"
@@ -429,7 +437,9 @@
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentLeft="false"
                 android:layout_alignParentTop="true"
-                android:src="@drawable/unfollow" />
+                android:src="@drawable/unfollow"
+                android:onClick="followCategory"
+                android:tag="recordings" />
         </LinearLayout>
 
 
@@ -471,7 +481,7 @@
                         android:ellipsize="end"
                         android:id="@+id/documents_firstLine"
                         android:layout_toRightOf="@+id/icon"
-                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:layout_toLeftOf="@+id/photos_status"
                         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                         android:textColor="@android:color/black" />
 
@@ -487,7 +497,7 @@
                             android:id="@+id/documents_total_synced_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.79" />
 
                         <TextView
@@ -497,7 +507,7 @@
                             android:id="@+id/documents_total_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.69" />
 
                     </LinearLayout>
@@ -506,7 +516,7 @@
             </LinearLayout>
 
             <ImageView
-                android:layout_width="20dp"
+                android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:id="@+id/documents_status"
                 android:layout_alignParentStart="false"
@@ -514,7 +524,9 @@
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentLeft="false"
                 android:layout_alignParentTop="true"
-                android:src="@drawable/unfollow" />
+                android:src="@drawable/unfollow"
+                android:onClick="followCategory"
+                android:tag="documents" />
         </LinearLayout>
 
 
@@ -555,7 +567,7 @@
                         android:ellipsize="end"
                         android:id="@+id/apk_firstLine"
                         android:layout_toRightOf="@+id/icon"
-                        android:layout_toLeftOf="@+id/imgStatus"
+                        android:layout_toLeftOf="@+id/photos_status"
                         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                         android:textColor="@android:color/black" />
 
@@ -571,7 +583,7 @@
                             android:id="@+id/apk_total_synced_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.79" />
 
                         <TextView
@@ -581,7 +593,7 @@
                             android:id="@+id/apk_total_files"
                             android:layout_below="@+id/firstLine"
                             android:layout_toRightOf="@+id/icon"
-                            android:layout_toLeftOf="@+id/imgStatus"
+                            android:layout_toLeftOf="@+id/photos_status"
                             android:layout_weight="0.69" />
 
                     </LinearLayout>
@@ -590,7 +602,7 @@
             </LinearLayout>
 
             <ImageView
-                android:layout_width="20dp"
+                android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:id="@+id/apk_status"
                 android:layout_alignParentStart="false"
@@ -598,7 +610,9 @@
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentLeft="false"
                 android:layout_alignParentTop="true"
-                android:src="@drawable/unfollow" />
+                android:src="@drawable/unfollow"
+                android:tag="apps"
+                android:onClick="followCategory" />
         </LinearLayout>
 
 

@@ -14,6 +14,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -37,6 +39,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -112,7 +115,7 @@ public class MainActivity extends AppCompatActivity
         resetCounters();
         testFtpConnect(null);
         setDefaultPaths();
-        loadCategoriesContent();
+//        loadCategoriesContent();
     }
 
     private void resetCounters() {
@@ -122,6 +125,7 @@ public class MainActivity extends AppCompatActivity
         total.put(Constants.DOCUMENTS_CATERGORY_NAME,0);
         total.put(Constants.MUSIC_CATERGORY_NAME,0);
         total.put(Constants.RECORDINGS_CATERGORY_NAME,0);
+        total.put(Constants.APPS_CATERGORY_NAME,0);
 
         total_sent.put(Constants.COMPRESSED_CATERGORY_NAME,0);
         total_sent.put(Constants.VIDEO_CATERGORY_NAME,0);
@@ -129,66 +133,70 @@ public class MainActivity extends AppCompatActivity
         total_sent.put(Constants.DOCUMENTS_CATERGORY_NAME,0);
         total_sent.put(Constants.MUSIC_CATERGORY_NAME,0);
         total_sent.put(Constants.RECORDINGS_CATERGORY_NAME,0);
+        total_sent.put(Constants.APPS_CATERGORY_NAME,0);
     }
 
     private void setDefaultPaths(){
-        String following_paths = Utils.getInstance(context).getConfigString("following_paths");
-        JSONArray ja;
-
+        JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB("following_paths");
         ArrayMap<String,Boolean> am = new ArrayMap<>();
-        try {
-            ja = new JSONArray(following_paths);
-            for(int i=0;i<ja.length();i++){
-                try{
-                    //TODO:Make more efficient
 
-                    am.put(ja.getJSONObject(i).getString("path"),true);
-                }catch (Exception e){}
-            }
-
-
-
-        } catch (JSONException e) {
-            e.printStackTrace();
+        JSONObject version =  Utils.getInstance(context).getJsonObjFromDB("following_paths");
+        if(version == null ){
+            /*If the version is not identified then for sure it is not version 3, then reformat the available data*/
             ja = new JSONArray();
+            Utils.getInstance(context).storeConfigString("version",Constants.VERSION);
         }
+        for(int i=0;i<ja.length();i++){
+            try{
+                am.put(ja.getJSONObject(i).getString("path"),true);
+            }catch (Exception e){}
+        }
+
         String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath();
         if(!am.containsKey(path)){
 
-            ja.put(path);
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(path);
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_NOTIFICATIONS).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PODCASTS).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_RINGTONES).getAbsolutePath();
-        if(!
-                am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path));
+        if(!am.containsKey(path)){
+            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         Utils.getInstance(context).storeConfigString("following_paths",ja.toString());
 
@@ -302,48 +310,59 @@ public class MainActivity extends AppCompatActivity
             loadCategoriesContent();
         }
     }
-    private void loadCategoriesContent(){
+    private void loadCategoriesContent() {
+//        new Thread() {
+//            public void run() {
+        //TODO:Show loading...
+        final ProgressDialog progressDialog = ProgressDialog.show(context, "Loading Categories", "Please wait.");
+        resetCounters();
+        runOnUiThread(new Thread() {
 
+            @Override
+            public void run() {
 
-
-        String following_paths = Utils.getInstance(context).getConfigString("following_paths");
-        JSONArray ja;
-        try {
-            ja = new JSONArray(following_paths);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            ja = new JSONArray();
-        }
-        for (int i = 0; i < ja.length(); i++) {
-            try {
-                JSONObject jo = ja.getJSONObject(i);
-                String status = jo.getString("status");
-                if (!Constants.FOLLOWING_DIR.equals(status)) {
-                    continue;
-                }
-                String pathname = jo.getString("path");
-                Long lastUpdate = jo.getLong("date");
-                ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(pathname);
-
-                for (final PathDetails pd : pda) {
+                JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB("following_paths");
+                for (int i = 0; i < ja.length(); i++) {
                     try {
-                        String categoryName = Utils.FileSysAPI.getFileCategory(pd.getFullpath());
-                        if(null == categoryName){
+                        JSONObject jo = ja.getJSONObject(i);
+                        String status = jo.getString("status");
+                        if (!Constants.FOLLOWING_DIR.equals(status)) {
                             continue;
                         }
-                        total.put(categoryName,total.get(categoryName)+1);
-                        int total_sent_ctr = total_sent.get(categoryName);
-                        total_sent.put(categoryName, Utils.getInstance(context).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENT) ? total_sent_ctr  + 1 : total_sent_ctr) ;
-                    } catch (Exception e) {
+                        String pathname = jo.getString("path");
+                        Long lastUpdate = jo.getLong("date");
+                        ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(pathname);
+                        if(pda == null){
+                            continue;
+                        }
+                        for (final PathDetails pd : pda) {
+                            try {
+                                String categoryName = Utils.FileSysAPI.getFileCategory(pd.getFullpath());
+                                if (null == categoryName) {
+                                    continue;
+                                }
+                                total.put(categoryName, total.get(categoryName) + 1);
+                                int total_sent_ctr = total_sent.get(categoryName);
+                                boolean shouldInc = Utils.getInstance(context).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENT);
+                                if(!shouldInc)
+                                    Log.v("loadCategoriesContent", "shouldInc for file "  +pd.getFullpath()+ " is " +(shouldInc?"True":"False"));
+
+                                total_sent.put(categoryName, shouldInc ? total_sent_ctr + 1 : total_sent_ctr);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
+                updateCounters();
+                progressDialog.dismiss();
             }
-        }
-        updateCounters();
+        });
 
+//            }
+//        }.start();
     }
 
     private void updateCounters() {
@@ -379,10 +398,12 @@ public class MainActivity extends AppCompatActivity
         compressed_total_files.setText("Total: " + total.get(Constants.COMPRESSED_CATERGORY_NAME));
         compressed_total_sent_files.setText("Synced: " + total_sent.get(Constants.COMPRESSED_CATERGORY_NAME));
 
-//        TextView apk_total_files = (TextView) findViewById(R.id.apk_total_files);
-//        TextView apk_total_sent_files = (TextView) findViewById(R.id.apk_total_synced_files);
-//        apk_total_files.setText("Total: " + total.get(Constants.));
-//        apk_total_sent_files.setText("Synced: " + total_sent.get(Constants.VIDEO_CATERGORY_NAME));
+        TextView apk_total_files = (TextView) findViewById(R.id.apk_total_files);
+        TextView apk_total_sent_files = (TextView) findViewById(R.id.apk_total_synced_files);
+        apk_total_files.setText("Total: " + total.get(Constants.APPS_CATERGORY_NAME));
+        apk_total_sent_files.setText("Synced: " + total_sent.get(Constants.APPS_CATERGORY_NAME));
+
+        setCategoriesStatus();
     }
 
     @Override
@@ -408,6 +429,23 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+    public void refreshCategory(MenuItem item){
+        loadCategoriesContent();
+    }
+    public void followCategory(View view) {
+        ImageView iv = (ImageView)view;
+        boolean isFollowing = Utils.getInstance(context).convertCategoryStateInDB(iv.getTag().toString());
+        Drawable followIcon = getResources().getDrawable(R.drawable.follow, null);
+        Drawable unfollowIcon = getResources().getDrawable(R.drawable.unfollow, null);
+        if(isFollowing){
+            iv.setImageDrawable(followIcon);
+        }else{
+            iv.setImageDrawable(unfollowIcon);
+        }
+        //loadCategoriesContent();
+
+    }
+
     interface Callback {
         void callback(); // would be in any signature
     }
@@ -561,12 +599,13 @@ public class MainActivity extends AppCompatActivity
         }
         return jo.toString();
     }
-    private JSONObject generateJsonStatus(String status,String path) {
+    private JSONObject generateJsonStatus(String status,String path,boolean isDefault) {
         JSONObject jo = new JSONObject();
         try {
             jo.put("date",System.currentTimeMillis());
             jo.put("status",status);
             jo.put("path",path);
+            jo.put("default",isDefault);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -606,12 +645,13 @@ public class MainActivity extends AppCompatActivity
             while (iter.hasNext()) {
                 String filename = iter.next();
                 String status = b.getString(filename);
+                String previous_status = Utils.getInstance(context).getPathStatus(filename);
                 Utils.getInstance(context).storeConfigString(filename, generateStatus(status,filename));
                 if(Constants.STATUS_SENT.equals(status)){
                     //Update Counters
                     String categoryName = Utils.FileSysAPI.getFileCategory(filename);
-                    if(null != categoryName) {
-                        total.put(categoryName, total.get(categoryName) + 1);
+                    /*i added !status.equals(previous_status) in order to ban updating the counter twice on a resent file*/
+                    if(null != categoryName && !status.equals(previous_status)) {
                         int total_sent_ctr = total_sent.get(categoryName);
                         total_sent.put(categoryName, Utils.getInstance(context).getPathStatus(filename).equals(Constants.STATUS_SENT) ? total_sent_ctr + 1 : total_sent_ctr);
                     }
@@ -853,8 +893,76 @@ public class MainActivity extends AppCompatActivity
         }
         return 0;
     }
+    private void setCategoriesStatus(){
+        JSONObject jo = Utils.getInstance(context).getJsonObjFromDB("categories");
+        if(jo == null){
+            /* the categories are not in the database - create them with default values */
+            jo = new JSONObject();
+            try {
+                jo.put("music", new JSONObject().put("status",Constants.FOLLOWING_DIR).put("name","Music"));
+                jo.put("videos", new JSONObject().put("status",Constants.FOLLOWING_DIR).put("name","Videos"));
+                jo.put("photos", new JSONObject().put("status",Constants.FOLLOWING_DIR).put("name","Photos"));
+                jo.put("recordings", new JSONObject().put("status",Constants.FOLLOWING_DIR).put("name","Recordings"));
+                jo.put("compressed", new JSONObject().put("status",Constants.FOLLOWING_DIR).put("name","Compressed"));
+                jo.put("documents", new JSONObject().put("status",Constants.FOLLOWING_DIR).put("name","Documents"));
+                jo.put("apps", new JSONObject().put("status",Constants.FOLLOWING_DIR).put("name","Apps"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Utils.getInstance(context).storeConfigString("categories",jo.toString());
+        }
+        try {
+            Drawable followIcon = getResources().getDrawable(R.drawable.follow, null);
+            Drawable unfollowIcon = getResources().getDrawable(R.drawable.unfollow, null);
+            ImageView iv = (ImageView)findViewById(R.id.music_status);
+            if(jo.getJSONObject("music").getString("status").equals(Constants.FOLLOWING_DIR)){
+                iv.setImageDrawable(followIcon);
+            }else{
+                iv.setImageDrawable(unfollowIcon);
+            }
+            iv = (ImageView)findViewById(R.id.video_status);
+            if(jo.getJSONObject("videos").getString("status").equals(Constants.FOLLOWING_DIR)){
+                iv.setImageDrawable(followIcon);
+            }else{
+                iv.setImageDrawable(unfollowIcon);
+            }
+            iv = (ImageView)findViewById(R.id.photos_status);
+            if(jo.getJSONObject("photos").getString("status").equals(Constants.FOLLOWING_DIR)){
+                iv.setImageDrawable(followIcon);
+            }else{
+                iv.setImageDrawable(unfollowIcon);
+            }
+            iv = (ImageView)findViewById(R.id.recordings_status);
+            if(jo.getJSONObject("recordings").getString("status").equals(Constants.FOLLOWING_DIR)){
+                iv.setImageDrawable(followIcon);
+            }else{
+                iv.setImageDrawable(unfollowIcon);
+            }
+            iv = (ImageView)findViewById(R.id.compressed_status);
+            if(jo.getJSONObject("compressed").getString("status").equals(Constants.FOLLOWING_DIR)){
+                iv.setImageDrawable(followIcon);
+            }else{
+                iv.setImageDrawable(unfollowIcon);
+            }
+            iv = (ImageView)findViewById(R.id.documents_status);
+            if(jo.getJSONObject("documents").getString("status").equals(Constants.FOLLOWING_DIR)){
+                iv.setImageDrawable(followIcon);
+            }else{
+                iv.setImageDrawable(unfollowIcon);
+            }
+            iv = (ImageView)findViewById(R.id.apk_status);
+            if(jo.getJSONObject("apps").getString("status").equals(Constants.FOLLOWING_DIR)){
+                iv.setImageDrawable(followIcon);
+            }else{
+                iv.setImageDrawable(unfollowIcon);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
 
+    }
     private void scanDirectoriesOnDemand(){
         ArraySet<PathDetails> filesToSend = new ArraySet<>();
         ftpnode = Utils.getInstance(context).getFTPSettings();
@@ -862,20 +970,16 @@ public class MainActivity extends AppCompatActivity
             return;
         }
         shouldStartRotatingIcon(true);
+        loadCategoriesContent();
         if (totalFilesShouldBeSent !=0 && totalHandled < totalFilesShouldBeSent){
             Utils.getInstance(context).showAlert(
                     "Sync process already running. please wait until it finishes",
                     "Second request",
                     false);
         }
-        String following_paths = Utils.getInstance(context).getConfigString("following_paths");
-        JSONArray ja;
-        try {
-            ja = new JSONArray(following_paths);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            ja = new JSONArray();
-        }
+
+        JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB("following_paths");
+
         totalFilesShouldBeSent = 0;
         totalFilesAlreadySent = 0;
         totalHandled = 0;
@@ -885,6 +989,7 @@ public class MainActivity extends AppCompatActivity
                 String status = jo.getString("status");
                 if(Constants.FOLLOWING_DIR.equals(status)){
                     ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(jo.getString("path"));
+
                     for (final PathDetails pd: pda) {
                         if(     pd.isDirectory() ||
                                 Utils.getInstance(context).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENT)||
@@ -913,7 +1018,7 @@ public class MainActivity extends AppCompatActivity
 
     private boolean isTimeout(Long epochtime) {
         long diff = Math.abs(epochtime - new Date().getTime());
-        long diffDays = diff / (2*24 * 60 * 60 * 1000);
+        long diffDays = diff / Constants.DEFAULT_SENDING_TIMEOUT_MS;
         return diffDays  >= 1;
     }
 
