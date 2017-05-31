@@ -48,6 +48,7 @@ public class Rules extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         context = this;
         setContentView(R.layout.activity_rules);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.rules_toolbar);
         setSupportActionBar(toolbar);
 

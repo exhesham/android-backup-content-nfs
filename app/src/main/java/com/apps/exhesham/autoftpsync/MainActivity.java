@@ -88,6 +88,8 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         context = this;
         ftpnode = Utils.getInstance(context).getFTPSettings();
 
@@ -240,7 +242,7 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.file_sys_browse) {
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
 
@@ -250,7 +252,7 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_share) {
 
-        } else if (id == R.id.nav_send) {
+        } else if (id == R.id.shared_fs_scan) {
 
         }
 
@@ -799,6 +801,15 @@ public class MainActivity extends AppCompatActivity
     public void viewFileSystem(MenuItem item){
         try{
             Intent k = new Intent(MainActivity.this, FTPSync.class);
+            startActivityForResult(k,1);
+        }catch (Exception ex){
+            Log.getStackTraceString(ex);
+        }
+    }
+
+    public void viewSharedFS(MenuItem item){
+        try{
+            Intent k = new Intent(MainActivity.this, SharedStorageFileSys.class);
             startActivityForResult(k,1);
         }catch (Exception ex){
             Log.getStackTraceString(ex);

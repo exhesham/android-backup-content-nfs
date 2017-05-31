@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <group android:checkableBehavior="single">
+    <item android:title="Under the hood">
+    <menu>
         <item
-            android:id="@+id/nav_camera"
+            android:id="@+id/file_sys_browse"
             android:icon="@drawable/folder"
             android:onClick="viewFileSystem"
             android:title="File System" />
@@ -18,12 +19,12 @@
             android:onClick="viewFollowedDirs"
             android:title="Followd Directories" />
         <item
-            android:id="@+id/nav_manage"
-            android:onClick="help"
-            android:icon="@drawable/help"
-            android:title="Help" />
-    </group>
-
+            android:id="@+id/shared_fs_scan"
+            android:icon="@drawable/shared_filesys"
+            android:onClick="viewSharedFS"
+            android:title="LAN Shard Filesystem" />
+    </menu>
+    </item>
     <item android:title="Settings">
         <menu>
             <item
@@ -31,11 +32,15 @@
                 android:icon="@drawable/ic_menu_manage"
                 android:onClick="viewSettings"
                 android:title="FTP Settings" />
-            <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="General Settings" />
         </menu>
     </item>
-
+    <item android:title="Others">
+        <menu>
+            <item
+                android:id="@+id/nav_manage"
+                android:onClick="help"
+                android:icon="@drawable/help"
+                android:title="Help" />
+        </menu>
+    </item>
 </menu>

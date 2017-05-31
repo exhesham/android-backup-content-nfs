@@ -5,20 +5,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:gravity="center_horizontal"
     android:orientation="vertical"
+    android:fitsSystemWindows="true"
     tools:context="com.apps.exhesham.autoftpsync.FTPSettings">
+
     <android.support.v7.widget.Toolbar
         android:id="@+id/settings_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-
-        android:background="?attr/colorPrimaryDark"
-        android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Dark"/>
+        android:background="?attr/colorPrimary"
+        app:popupTheme="@style/AppTheme.NoActionBar.PopupOverlay" />
     <!-- Login progress -->
 
     <LinearLayout
         android:orientation="vertical"
+        android:paddingTop="16dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
