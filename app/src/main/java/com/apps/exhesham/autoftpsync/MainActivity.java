@@ -15,32 +15,28 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.view.menu.ActionMenuItemView;
-import android.util.ArrayMap;
-import android.util.ArraySet;
-import android.util.Log;
-import android.view.View;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.menu.ActionMenuItemView;
 import android.support.v7.widget.Toolbar;
+import android.util.ArrayMap;
+import android.util.ArraySet;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.apps.exhesham.autoftpsync.utils.Constants;
@@ -63,8 +59,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
-
-import static android.R.attr.data;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -793,14 +787,11 @@ public class MainActivity extends AppCompatActivity
             }
 
         } // onHandleIntent
-
-
-
     }
 
     public void viewFileSystem(MenuItem item){
         try{
-            Intent k = new Intent(MainActivity.this, FTPSync.class);
+            Intent k = new Intent(MainActivity.this, PhoneFileSystem.class);
             startActivityForResult(k,1);
         }catch (Exception ex){
             Log.getStackTraceString(ex);

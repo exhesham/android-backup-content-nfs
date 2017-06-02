@@ -4,15 +4,10 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.graphics.drawable.Drawable;
-import android.support.v7.view.menu.ActionMenuItemView;
 import android.text.InputType;
 import android.util.Log;
-import android.view.MenuItem;
 import android.widget.EditText;
 
-import com.apps.exhesham.autoftpsync.FTPSync;
-import com.apps.exhesham.autoftpsync.R;
 import com.apps.exhesham.autoftpsync.Rules;
 
 import org.apache.commons.io.FilenameUtils;
@@ -21,10 +16,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.Callable;
 
 /**
  * Created by hesham on 1/28/2017.
