@@ -51,6 +51,7 @@ public class Rules extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.rules_toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -60,7 +61,7 @@ public class Rules extends AppCompatActivity {
             }
         });
         displayRulesOnTable();
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

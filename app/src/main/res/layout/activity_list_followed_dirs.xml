@@ -22,6 +22,14 @@
             android:minHeight="?attr/actionBarSize"
             android:id="@+id/followed_dirs_tb" />
 
+        <TextView
+            android:text="In the next table, you can see the phone directories that are scanned. There are the default directories that you cannot delete and the custom directories that you pinned."
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/textViewInfo"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp" />
+
         <ListView
             android:id="@+id/followed_dirs_listview"
             android:layout_width="match_parent"

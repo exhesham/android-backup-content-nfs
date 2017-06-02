@@ -1,4 +1,4 @@
-#Guide
+# Guide
 
 This Application categorize your files and let you choose what category to be synced into the FTP. The categories are determined according to extensions. Those extensions are predefined and you can customize them to support more file types.
 
@@ -7,13 +7,13 @@ The App will create folders in the FTP. Those folders are configured in the Rule
 
 ![Alt text](app/src/main/assets/sync_now.png)
 
-#Behaviour
+# Behaviour
 
 * Categories are determined according to extensions
 * extensions are mapped to folders. Those folders are created in the FTP
 * Categories looks for relevant files in pre-configured paths
 
-#Configuration - Database Structure
+# Configuration - Database Structure
 
 The followed path status are both available as standalone and as array
 The "default" tells whether it is a fixed path or not.
@@ -49,7 +49,7 @@ The Categories order:
 }
 ```
 
-The rules order
+# The rules order
 Rules manages the extenstions and map to what folder each extenstion goes.
 the default extension is "*" and its folder_name can be a valid folder name or the value "<IGNORE FILE>"
 if the value <IGNORE FILE> is mapped to * then the default extensions will ignored
@@ -67,6 +67,6 @@ if the value <IGNORE FILE> is mapped to * then the default extensions will ignor
 
 
 
-##Notes:
+## Notes:
 * When scanning files for sending, if a file in status sending, it will not be resent in case the sending
 was updated 10 minutes before. the constant of the timeout is DEFAULT_SENDING_TIMEOUT_MS

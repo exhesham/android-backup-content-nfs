@@ -13,6 +13,7 @@ public class Help extends AppCompatActivity {
 
         WebView lWebView = (WebView)findViewById(R.id.webView);
 //        getSupportActionBar().setDisplayShowHomeEnabled(true);
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         lWebView.loadUrl("file:///android_asset/help.html");
     }
 }

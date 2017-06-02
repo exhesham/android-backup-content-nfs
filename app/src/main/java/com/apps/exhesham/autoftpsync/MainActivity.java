@@ -47,6 +47,7 @@ import com.apps.exhesham.autoftpsync.utils.Utils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.io.Util;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -136,7 +137,7 @@ public class MainActivity extends AppCompatActivity
         JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB("following_paths");
         ArrayMap<String,Boolean> am = new ArrayMap<>();
 
-        JSONObject version =  Utils.getInstance(context).getJsonObjFromDB("following_paths");
+        String version =  Utils.getInstance(context).getConfigString("version");
         if(version == null ){
             /*If the version is not identified then for sure it is not version 3, then reformat the available data*/
             ja = new JSONArray();
@@ -151,47 +152,47 @@ public class MainActivity extends AppCompatActivity
         String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath();
         if(!am.containsKey(path)){
 
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            ja.put(Utils.getInstance(context).generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
             Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            ja.put(Utils.getInstance(context).generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
             Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            ja.put(Utils.getInstance(context).generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
             Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            ja.put(Utils.getInstance(context).generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
             Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            ja.put(Utils.getInstance(context).generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
             Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_NOTIFICATIONS).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            ja.put(Utils.getInstance(context).generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
             Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            ja.put(Utils.getInstance(context).generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
             Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PODCASTS).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            ja.put(Utils.getInstance(context).generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
             Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_RINGTONES).getAbsolutePath();
         if(!am.containsKey(path)){
-            ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
+            ja.put(Utils.getInstance(context).generateJsonStatus(Constants.FOLLOWING_DIR, path, true));
             Utils.getInstance(context).storeConfigString(path, generateStatus(Constants.FOLLOWING_DIR, path));
         }
         Utils.getInstance(context).storeConfigString("following_paths",ja.toString());
@@ -594,19 +595,6 @@ public class MainActivity extends AppCompatActivity
             e.printStackTrace();
         }
         return jo.toString();
-    }
-    private JSONObject generateJsonStatus(String status,String path,boolean isDefault) {
-        JSONObject jo = new JSONObject();
-        try {
-            jo.put("date",System.currentTimeMillis());
-            jo.put("status",status);
-            jo.put("path",path);
-            jo.put("default",isDefault);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return jo;
     }
 
 

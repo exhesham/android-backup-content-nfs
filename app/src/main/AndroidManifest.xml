@@ -15,9 +15,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
-        <activity
-            android:name=".PhoneFileSystem"
-            android:label="@string/app_name"></activity>
+
         <activity
             android:name=".FTPSettings"
             android:label=""
@@ -47,7 +45,8 @@
         <activity
             android:name=".Rules"
             android:label="@string/title_activity_rules"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:parentActivityName=".MainActivity"
+            >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.apps.exhesham.autoftpsync.MainActivity" />
@@ -61,16 +60,35 @@
                 android:value="com.apps.exhesham.autoftpsync.MainActivity" />
         </activity>
         <activity
+            android:name=".PhoneFileSystem"
+            android:label="Phone File System"
+            android:parentActivityName=".MainActivity"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.apps.exhesham.autoftpsync.MainActivity" />
+        </activity>
+
+        <activity android:name=".SharedStorageFileSys"
+            android:label="Shared File System"
+            android:parentActivityName=".MainActivity"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.apps.exhesham.autoftpsync.MainActivity" />
+        </activity>
+        <activity
             android:name=".MainActivity"
             android:label="Sync Phone"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SharedStorageFileSys"></activity>
+
+
+
     </application>
 
 </manifest>

@@ -73,7 +73,7 @@ public class ListFollowedDirs extends AppCompatActivity {
                 }
 
                 boolean isDefault = false;
-                if(jo.has("status")) {
+                if(jo.has("default")) {
                     isDefault = jo.getBoolean("default");
                 }
                 FollowedDirDetails currPath = new FollowedDirDetails();

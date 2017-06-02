@@ -42,7 +42,8 @@ public class PhoneFileSystem extends AppCompatActivity {
         setContentView( R.layout.activity_ftpsync);
         Toolbar myToolbar = (Toolbar) findViewById(R.id.maintoolbar);
         setSupportActionBar(myToolbar);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         fillTable(Constants.DEFAULT_PATH);
     }
 
