@@ -51,7 +51,7 @@ public class PhoneFileSystem extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.maintoolbar, menu);
+        getMenuInflater().inflate(R.menu.phone_file_sys_toolbar, menu);
         return true;
     }
     public void backFolder(View v){
