@@ -26,7 +26,7 @@
         </activity>
 
         <service
-            android:name=".MainActivity$FTPAPI"
+            android:name=".MainActivity$FtpSenderServiceAPI"
             android:label=""
             android:parentActivityName=".MainActivity">
             <meta-data
@@ -70,7 +70,7 @@
         </activity>
 
         <activity android:name=".NetworkFsSettings"
-            android:label="Shared File System"
+            android:label="SMB Settings"
             android:parentActivityName=".MainActivity"
             >
             <meta-data

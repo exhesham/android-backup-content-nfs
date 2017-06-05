@@ -42,4 +42,14 @@ public final class Constants {
 
     public static final String VERSION = "3";
     public static final long DEFAULT_SENDING_TIMEOUT_MS = 5 * 60 * 1000;
+
+    public static final String DB_FOLLOWED_DIRS = "following_paths";
+    public static final String DB_FTP_SETTINGS = "settings";
+    public static final String DB_SMB_SERVER = "smb_server";
+    public static final String DB_SMB_DEFAULT_PATH = "smb_default_path";
+
+
+    public static final String DB_SMB_USERNAME = "smb_username";
+    public static final String DB_SMB_PASSWORD = "smb_password";
+    public static final String DB_SMB_SETTINGS = "smb_settings_node";
 }

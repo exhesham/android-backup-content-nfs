@@ -73,7 +73,7 @@ public class Rules extends AppCompatActivity {
     private ArrayMap<String,String> readRules(){
         boolean shouldUpdateDB = false;
         JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB("rules");
-        JSONObject version =  Utils.getInstance(context).getJsonObjFromDB("following_paths");
+        JSONObject version =  Utils.getInstance(context).getJsonObjFromDB(Constants.DB_FOLLOWED_DIRS);
         if(version == null || ja.length() == 0){
             /*If the version is not identified then for sure it is not version 3, then reformat the available data*/
             ja = new JSONArray();

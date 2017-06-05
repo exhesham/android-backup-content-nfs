@@ -12,7 +12,8 @@ import android.widget.CheckBox;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
-import com.apps.exhesham.autoftpsync.utils.FTPNode;
+import com.apps.exhesham.autoftpsync.utils.Constants;
+import com.apps.exhesham.autoftpsync.utils.FTPSettingsNode;
 import com.apps.exhesham.autoftpsync.utils.Utils;
 
 import org.json.JSONException;
@@ -46,7 +47,7 @@ public class FTPSettings extends AppCompatActivity{
         RadioButton passiveMode = (RadioButton) findViewById(R.id.radioPassive);
         CheckBox annonymous = (CheckBox) findViewById(R.id.check_anonymousmode);
         try{
-            Utils.getInstance(this).storeConfigString("settings", new FTPNode(
+            Utils.getInstance(this).storeConfigString(Constants.DB_FTP_SETTINGS, new FTPSettingsNode(
                     username.getText().toString(),
                     password.getText().toString(),
                     Integer.parseInt(port.getText().toString()),
@@ -73,7 +74,7 @@ public class FTPSettings extends AppCompatActivity{
     }
 
     public void viewSettings(){
-        String availableFTP = Utils.getInstance(this).getConfigString("settings");
+        String availableFTP = Utils.getInstance(this).getConfigString(Constants.DB_FTP_SETTINGS);
 
         TextView username = (TextView) findViewById(R.id.text_username);
         TextView password = (TextView) findViewById(R.id.text_password);
@@ -84,7 +85,7 @@ public class FTPSettings extends AppCompatActivity{
         if(availableFTP != null && !availableFTP.equals("")) {
             try {
                 jo = new JSONObject(availableFTP);
-                FTPNode fn = FTPNode.parseJSON(jo);
+                FTPSettingsNode fn = FTPSettingsNode.parseJSON(jo);
                 if(fn == null){
                     return;
                 }

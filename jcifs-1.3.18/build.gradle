@@ -1,0 +1,4 @@
+configurations.maybeCreate("default")
+artifacts.add("default", file('jcifs-1.3.18.jar'))
+dependencies {
+}

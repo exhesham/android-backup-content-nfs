@@ -57,7 +57,7 @@ public class ListFollowedDirs extends AppCompatActivity {
         final ListView listview = (ListView) findViewById(R.id.followed_dirs_listview);
 
 
-        JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB("following_paths");
+        JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);
 
         for (int i = 0; i < ja.length(); i++) {
             try {

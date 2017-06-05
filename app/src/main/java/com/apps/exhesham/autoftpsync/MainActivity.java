@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
@@ -40,13 +41,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.apps.exhesham.autoftpsync.utils.Constants;
-import com.apps.exhesham.autoftpsync.utils.FTPNode;
+import com.apps.exhesham.autoftpsync.utils.FTPSettingsNode;
 import com.apps.exhesham.autoftpsync.utils.PathDetails;
+import com.apps.exhesham.autoftpsync.utils.SMBSettingsNode;
+import com.apps.exhesham.autoftpsync.utils.SmbAPI;
 import com.apps.exhesham.autoftpsync.utils.Utils;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.io.Util;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -69,7 +73,8 @@ public class MainActivity extends AppCompatActivity
     static int totalHandled =0;
     static boolean isFtpSettingsCorrect = false;
     private Context context;
-    static FTPNode ftp_settings;
+    static FTPSettingsNode ftp_settings;
+    static SMBSettingsNode smb_settings;
     HashMap<String,Integer> total = new HashMap<>();
     HashMap<String,Integer> total_sent = new HashMap<>();
 
@@ -84,20 +89,23 @@ public class MainActivity extends AppCompatActivity
         // Set public params
         context = this;
         ftp_settings = Utils.getInstance(context).getFTPSettings();
+        smb_settings = Utils.getInstance(context).getSMBSettings();
 
 
         initializeUI();
 
         // start
         resetCounters();
-        testFtpConnect(null);
+        testSmbConnect(null);
         setDefaultPaths();
 //        loadCategoriesContent();
     }
+
     private void scanDirectoriesOnDemand(){
         ArraySet<PathDetails> filesToSend = new ArraySet<>();
-        ftp_settings = Utils.getInstance(context).getFTPSettings();
-        if(isFtpSettingsCorrect == false){
+        smb_settings = Utils.getInstance(context).getSMBSettings();
+        if(Utils.getInstance(context).validateSmbCredintials(smb_settings)){
+            showSnackBar("Network Settings Incorrect", "Fix", new MyHelpListener(), false);
             return;
         }
         shouldStartRotatingIcon(true);
@@ -109,7 +117,7 @@ public class MainActivity extends AppCompatActivity
                     false);
         }
 
-        JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB("following_paths");
+        JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);
 
         totalFilesShouldBeSent = 0;
         totalFilesAlreadySent = 0;
@@ -149,6 +157,7 @@ public class MainActivity extends AppCompatActivity
     private int sendFiles(ArraySet<PathDetails> pdArr) {
         ArrayList<CharSequence> fullSrcPaths = new ArrayList<>();
         ArrayList<CharSequence> fullDstPaths = new ArrayList<>();
+        boolean useSmbAsDefault = ! "false".equals(Utils.getInstance(context).getConfigString("use-ftp-as-default"));
         if(ftp_settings == null){
             ftp_settings = Utils.getInstance(context).getFTPSettings();
         }
@@ -170,6 +179,8 @@ public class MainActivity extends AppCompatActivity
             Intent mServiceIntent = new Intent(context, FtpSenderServiceAPI.class);
             mServiceIntent.putCharSequenceArrayListExtra("full-src-paths",fullSrcPaths);
             mServiceIntent.putCharSequenceArrayListExtra("full-dst-paths",fullDstPaths);
+            mServiceIntent.putExtra("use-smb-as-default",useSmbAsDefault);
+
 
             context.startService(mServiceIntent);
 
@@ -180,7 +191,7 @@ public class MainActivity extends AppCompatActivity
         return 0;
     }
 
-    public static class FtpSenderServiceAPI extends IntentService {
+    public class FtpSenderServiceAPI extends IntentService {
         public FtpSenderServiceAPI() {
             super("ReminderService");
         }
@@ -191,7 +202,7 @@ public class MainActivity extends AppCompatActivity
             // Broadcasts the Intent to receivers in this app.
             LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
         }
-        private static void ftpCreateDirectoryTree( FTPClient client, String dirTree ) throws IOException {
+        private  void ftpCreateDirectoryTree( FTPClient client, String dirTree ) throws IOException {
 
             boolean dirExists = true;
 
@@ -218,9 +229,79 @@ public class MainActivity extends AppCompatActivity
         protected void onHandleIntent(Intent workIntent)  {
             final  ArrayList<CharSequence> fileSrcPaths = workIntent.getCharSequenceArrayListExtra("full-src-paths");
             final  ArrayList<CharSequence> fileDstPaths = workIntent.getCharSequenceArrayListExtra("full-dst-paths");
+            final  boolean useSMB = workIntent.getBooleanExtra("use-smb-as-default", false);
 
-            //TODO: This function decides if to send to ftp or to networks fs
-            FTPClient con = null;
+            if(useSMB){
+                sendWithFtpProtocol(fileSrcPaths,fileDstPaths);
+            }else{
+                sendWithSmbProtocol(fileSrcPaths,fileDstPaths);
+            }
+
+        } // onHandleIntent
+
+        private void sendWithSmbProtocol(ArrayList<CharSequence> fileSrcPaths, ArrayList<CharSequence> fileDstPaths) {
+            try
+            {
+
+                if (Utils.getInstance(context).validateSmbCredintials(smb_settings))
+                {
+                    for(int i = 0; i<fileSrcPaths.size();i++) {
+                        totalHandled++;
+                        boolean isResultSuccess = false;
+                        String dstfolder = fileDstPaths.get(i).toString();
+                        String filepath = fileSrcPaths.get(i).toString();
+                        Log.v("onHandleIntent", "Will cd to path " + dstfolder);
+
+
+                        try {
+                            if(new SmbAPI(smb_settings).doesFileExists(dstfolder+"/"+ FilenameUtils.getName(filepath))){
+                                updateStatus(filepath, Constants.STATUS_SENT);
+                                totalFilesAlreadySent++;
+                                continue;
+                            }
+                            new SmbAPI(smb_settings).smbCreateDirectoryTree(dstfolder);
+                            Log.v("onHandleIntent", "navigating to dir passed successfully!");
+
+                            String data = filepath;
+                            isResultSuccess = new SmbAPI(smb_settings).uploadFile(filepath);
+                        }catch (Exception ex){
+                            updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
+                            continue;
+                        }
+                        if (isResultSuccess) {
+                            updateStatus(filepath, Constants.STATUS_SENT);
+                            totalFilesAlreadySent++;
+                            Thread.sleep(10);
+//                        uploadFailing = false;
+                        } else {
+                            updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
+//                        uploadFailing = true;
+                        }
+
+                    }
+                }else{
+                    for(int i = 0; i<fileSrcPaths.size();i++) {
+                        String filepath = fileSrcPaths.get(i).toString();
+                        updateStatus(filepath, Constants.STATUS_FAILED_LOGIN);
+                        totalHandled++;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                for(int i = 0; i<fileSrcPaths.size();i++) {
+                    String filepath = fileSrcPaths.get(i).toString();
+                    updateStatus(filepath,Constants.STATUS_FAILED_CONNECTING);
+                    totalHandled++;
+                }
+
+                e.printStackTrace();
+//                uploadFailing = true;
+            }
+        }
+
+        private void sendWithFtpProtocol(ArrayList<CharSequence> fileSrcPaths, ArrayList<CharSequence> fileDstPaths) {
+            FTPClient con;
             try
             {
                 con = new FTPClient();
@@ -299,8 +380,9 @@ public class MainActivity extends AppCompatActivity
                 e.printStackTrace();
 //                uploadFailing = true;
             }
+        }
 
-        } // onHandleIntent
+
     }
 
     private void loadCategoriesContent() {
@@ -314,7 +396,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void run() {
 
-                JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB("following_paths");
+                JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);
                 for (int i = 0; i < ja.length(); i++) {
                     try {
                         JSONObject jo = ja.getJSONObject(i);
@@ -497,6 +579,37 @@ public class MainActivity extends AppCompatActivity
                 if(callback != null){
                     callback.callback();
                 }
+            }
+        }.start();
+    }
+
+    private void testSmbConnect(final Callback callback) {
+        if(smb_settings == null){
+            showSnackBar("Please Configure Network Storage Settings", "Config", new MyHelpListener(), true);
+            if(callback != null){
+                callback.callback();
+            }
+            return;
+        }
+        final ProgressDialog progressDialog = ProgressDialog.show(this, "Checking Network Storage Settings", "Please wait. Checking network connectivity and settings correctness...");
+        new Thread() {
+            public void run() {
+                if(! Utils.getInstance(context).validateSmbCredintials(smb_settings)){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Utils.getInstance(context).showAlert(
+                                    "The network settings is not correct",
+                                    "Network Configuration Error",
+                                    false);
+                        }
+                    });
+                }
+
+                progressDialog.dismiss();
+
+
+
             }
         }.start();
     }
@@ -742,7 +855,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setDefaultPaths(){
-        JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB("following_paths");
+        JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);
         ArrayMap<String,Boolean> am = new ArrayMap<>();
 
         String version =  Utils.getInstance(context).getConfigString("version");
@@ -757,6 +870,11 @@ public class MainActivity extends AppCompatActivity
             }catch (Exception e){}
         }
 
+        // use smb as the default
+        if(Utils.getInstance(context).getConfigString("use-smb-as-default") == null){
+            Utils.getInstance(context).storeConfigString("use-smb-as-default", "true");
+        }
+
         String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath();
         if(!am.containsKey(path)){
             JSONObject pathNode = Utils.getInstance(context).generateJsonStatus(Constants.FOLLOWING_DIR, path, true);
@@ -768,6 +886,7 @@ public class MainActivity extends AppCompatActivity
             JSONObject pathNode = Utils.getInstance(context).generateJsonStatus(Constants.FOLLOWING_DIR, path, true);
             ja.put(pathNode);
             Utils.getInstance(context).storeConfigString(path, pathNode.toString());
+
         }
         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
         if(!am.containsKey(path)){
@@ -811,7 +930,7 @@ public class MainActivity extends AppCompatActivity
             ja.put(pathNode);
             Utils.getInstance(context).storeConfigString(path, pathNode.toString());
         }
-        Utils.getInstance(context).storeConfigString("following_paths",ja.toString());
+        Utils.getInstance(context).storeConfigString(Constants.DB_FOLLOWED_DIRS,ja.toString());
     }
 
     private  void initializeUI(){
@@ -990,6 +1109,34 @@ public class MainActivity extends AppCompatActivity
 
             }
         }
+    }
+    public class MyHelpListener implements View.OnClickListener{
+
+        @Override
+        public void onClick(View v) {
+            try{
+                Intent k = new Intent(MainActivity.this, NetworkFsSettings.class);
+                startActivityForResult(k,1);
+            }catch (Exception ex){
+                Log.getStackTraceString(ex);
+            }
+        }
+    }
+    private void showSnackBar(String msg, String undo, View.OnClickListener listener, boolean indifinite){
+        //TODO: Move to utils
+        Snackbar mySnackbar;
+        if(indifinite){
+            mySnackbar = Snackbar.make(findViewById(R.id.main_activity_coord_layout),
+                    msg, Snackbar.LENGTH_INDEFINITE);
+        }else{
+            mySnackbar = Snackbar.make(findViewById(R.id.main_activity_coord_layout),
+                    msg, Snackbar.LENGTH_LONG);
+        }
+
+        TextView tv = (TextView) mySnackbar.getView().findViewById(android.support.design.R.id.snackbar_text);
+        tv.setTextColor(Color.WHITE);
+        mySnackbar.setAction(undo, listener);
+        mySnackbar.show();
     }
 
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_smb_save"
+        android:icon="@android:drawable/ic_menu_save"
+        android:title="Save Settings"
+        android:onClick="saveSmbSettings"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/action_smb_validate"
+        android:icon="@drawable/validate_settings"
+        android:title="Validate Settings"
+        android:onClick="validateSmbSettings"
+        app:showAsAction="always"/>
+</menu>

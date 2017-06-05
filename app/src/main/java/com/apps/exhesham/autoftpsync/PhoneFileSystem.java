@@ -17,7 +17,7 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.apps.exhesham.autoftpsync.utils.Constants;
-import com.apps.exhesham.autoftpsync.utils.FTPNode;
+import com.apps.exhesham.autoftpsync.utils.FTPSettingsNode;
 import com.apps.exhesham.autoftpsync.utils.PathDetails;
 import com.apps.exhesham.autoftpsync.utils.Utils;
 
@@ -28,7 +28,7 @@ import java.util.ArrayList;
 public class PhoneFileSystem extends AppCompatActivity {
     private String currPath = Constants.DEFAULT_PATH;
     private Context context;
-    static FTPNode ftpnode;
+    static FTPSettingsNode ftpnode;
 
 
 

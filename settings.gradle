@@ -1,1 +1,1 @@
-include ':app', ':commons-net-3.5'
+include ':app', ':commons-net-3.5', ':jcifs-1.3.18'

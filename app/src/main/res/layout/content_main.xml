@@ -11,7 +11,7 @@
     tools:showIn="@layout/app_bar_main">
 
     <LinearLayout
-
+        android:id="@+id/main_activity_coord_layout"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent">

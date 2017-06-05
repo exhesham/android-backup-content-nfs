@@ -4,7 +4,9 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.text.InputType;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.widget.EditText;
 
@@ -16,8 +18,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import jcifs.smb.NtlmPasswordAuthentication;
+import jcifs.smb.SmbFile;
+
+import static android.content.Context.WIFI_SERVICE;
 
 /**
  * Created by hesham on 1/28/2017.
@@ -51,7 +59,7 @@ public class Utils {
 
         return  sharedPref.getString(key, "");
     }
-    public String showAlert(String msg,String title,boolean addTextbox) {
+    public String showAlert(String msg, String title, boolean addTextbox) {
 
         Log.v("-->showAlert",msg);
         try {
@@ -85,7 +93,7 @@ public class Utils {
                 return null;
             }
 
-            return input.getText().toString();
+            return null;
         }catch (Exception e){
             e.printStackTrace();
             return null;
@@ -103,7 +111,7 @@ public class Utils {
             return Constants.STATUS_NOTHING;
         }
         JSONObject jo;
-//        JSONArray ja = getJsonArrayFromDB("following_paths")
+//        JSONArray ja = getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS)
 //        for(int i=0;i<ja.length();i++){
 //            try {
 //                if(ja.getJSONObject(i).getString("path").equals(currPath)){
@@ -155,7 +163,7 @@ public class Utils {
     public void convertFollowStateInDB(String currPath) {
 
         String status = getPathStatus(currPath);
-        JSONArray ja = getJsonArrayFromDB("following_paths");
+        JSONArray ja = getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);
 
         // First - Delete the path from following_paths
         for(int i=0;i<ja.length();i++){
@@ -177,25 +185,46 @@ public class Utils {
             storeConfigString(currPath, generateJsonStatus(Constants.FOLLOWING_DIR, currPath, false).toString());
             ja.put(generateJsonStatus(Constants.FOLLOWING_DIR, currPath, false));
         }
-        storeConfigString("following_paths",ja.toString());
+        storeConfigString(Constants.DB_FOLLOWED_DIRS,ja.toString());
     }
 
-    public FTPNode getFTPSettings() {
-        String availableFTPS = Utils.getInstance(myContext).getConfigString("settings");
+    public SMBSettingsNode getSMBSettings() {
+        String availableFTPS = Utils.getInstance(myContext).getConfigString(Constants.DB_SMB_SETTINGS);
         JSONObject jo;
         if ( availableFTPS == null || availableFTPS.equals("")){
             return null;
         }else{
             try {
                 jo = new JSONObject(availableFTPS);
-                return  FTPNode.parseJSON(jo);
+                return  SMBSettingsNode.parseJSON(jo);
             } catch (JSONException e) {
                 e.printStackTrace();
                 return  null;
             }
         }
-
     }
+
+    public FTPSettingsNode getFTPSettings() {
+        String availableFTPS = Utils.getInstance(myContext).getConfigString(Constants.DB_FTP_SETTINGS);
+        JSONObject jo;
+        if ( availableFTPS == null || availableFTPS.equals("")){
+            return null;
+        }else{
+            try {
+                jo = new JSONObject(availableFTPS);
+                return  FTPSettingsNode.parseJSON(jo);
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return  null;
+            }
+        }
+    }
+    public String getDefaultGatewayAddress() {
+        WifiManager wifiMgr = (WifiManager) myContext.getSystemService(WIFI_SERVICE);
+        String ipAddress = Formatter.formatIpAddress(wifiMgr.getDhcpInfo().gateway);
+        return ipAddress;
+
+    } // getDefaultAddress
 
     public JSONArray  getJsonArrayFromDB(String key) {
         String following_paths = getConfigString(key);
@@ -260,6 +289,41 @@ public class Utils {
         storeConfigString("rules",jaRules.toString());
 
         return  shouldFollow ;
+    }
+
+    public boolean validateSmbCredintials(SMBSettingsNode smb_settings) {
+        if (smb_settings == null){
+            return false;
+        }
+        String username = smb_settings.getUsername();
+        String password = smb_settings.getPassword();
+        String defaultAddress = smb_settings.getServerurl();
+        String dirname = smb_settings.getRootPath();
+        try{
+            String path = "smb://"+defaultAddress+"/" + dirname;
+            String user = username +":" + password;
+            NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(user);
+
+            SmbFile sFile = new SmbFile(path, auth);
+            for (SmbFile child : sFile.listFiles()){
+                System.out.println(child.getCanonicalPath());
+                if(child.isDirectory()){
+                    System.out.println("->Directory:" + child.isDirectory());
+                    System.out.println("->Can Write:" + child.canWrite());
+                    System.out.println("->Name:" + child.getName());
+                    System.out.println("------------------------------------");
+                }
+
+            }
+
+            System.out.println("Done!");
+            return true;
+        } catch (IOException e) {
+            // do something
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+        }
+        return false;
     }
 
     public static class FileSysAPI {
@@ -332,6 +396,8 @@ public class Utils {
             }
             return null;
         }
+
+
     }
 
 }

@@ -17,21 +17,22 @@
             android:id="@+id/nav_slideshow"
             android:icon="@drawable/followed_dirs"
             android:onClick="viewFollowedDirs"
-            android:title="Followd Directories" />
-        <item
-            android:id="@+id/shared_fs_scan"
-            android:icon="@drawable/shared_filesys"
-            android:onClick="viewSharedFS"
-            android:title="LAN Shard Filesystem" />
+            android:title="Followed Directories" />
+
     </menu>
     </item>
-    <item android:title="Settings">
+    <item android:title="FTP Settings">
         <menu>
             <item
                 android:id="@+id/nav_share"
                 android:icon="@drawable/ic_menu_manage"
                 android:onClick="viewSettings"
                 android:title="FTP Settings" />
+            <item
+                android:id="@+id/shared_fs_scan"
+                android:icon="@drawable/shared_filesys"
+                android:onClick="viewSharedFS"
+                android:title="Router Storage Settings" />
         </menu>
     </item>
     <item android:title="Others">
