@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">Sync to FTP</string>
+    <string name="app_name">Sync to Router USB</string>
     <string name="title_activity_available_ftps">Available FTPs</string>
     <string name="title_activity_add_new_ftp">Add New FTP</string>
 
     <!-- Strings related to login -->
-    <string name="appname">Sync to FTP</string>
+    <string name="appname">Sync to Router USB</string>
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password (optional)</string>
     <string name="action_sign_in">Sign in or register</string>

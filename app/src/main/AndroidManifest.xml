@@ -25,14 +25,7 @@
                 android:value="com.apps.exhesham.autoftpsync.MainActivity" />
         </activity>
 
-        <service
-            android:name=".MainActivity$FtpSenderServiceAPI"
-            android:label=""
-            android:parentActivityName=".MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.apps.exhesham.autoftpsync.MainActivity" />
-        </service>
+
 
         <activity
             android:name=".HelpActivity"
@@ -79,7 +72,7 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:label="Sync Phone"
+            android:label="Backup Phone"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

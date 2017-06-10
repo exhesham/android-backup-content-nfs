@@ -21,13 +21,9 @@
 
     </menu>
     </item>
-    <item android:title="FTP Settings">
+    <item android:title="Settings">
         <menu>
-            <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_manage"
-                android:onClick="viewNfsSettings"
-                android:title="FTP Settings" />
+
             <item
                 android:id="@+id/shared_fs_scan"
                 android:icon="@drawable/shared_filesys"

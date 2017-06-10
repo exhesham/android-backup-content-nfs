@@ -126,23 +126,6 @@ public class NfsSettingsActivity extends AppCompatActivity {
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
-    public static void createFile(String filename){
-        try{
-            String user = "exhesham:fenderHrod11";
-            NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(user);
-            String path = "smb://192.168.1.1/samsung/test.txt";
-            SmbFile sFile = new SmbFile(path, auth);
-            SmbFileOutputStream sfos = new SmbFileOutputStream(sFile);
-            sfos.write("Test".getBytes());
-            sfos.close();
-            System.out.println("Done!");
-        } catch (IOException e) {
-            // do something
-            e.printStackTrace();
-            System.out.println(e.getMessage());
-        }
-
-    }
 
     public void refreshPath(View view) {
         try {

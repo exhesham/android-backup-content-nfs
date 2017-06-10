@@ -159,8 +159,8 @@ public class MainActivity extends AppCompatActivity
 
     }
     private int sendFiles(ArraySet<PathDetails> pdArr) {
-        ArrayList<CharSequence> fullSrcPaths = new ArrayList<>();
-        ArrayList<CharSequence> fullDstPaths = new ArrayList<>();
+        final ArrayList<CharSequence> fullSrcPaths = new ArrayList<>();
+        final ArrayList<CharSequence> fullDstPaths = new ArrayList<>();
         boolean useSmbAsDefault = ! "false".equals(Utils.getInstance(context).getConfigString("use-ftp-as-default"));
         nfs_settings = nfs_settings == null?Utils.getInstance(context).getSMBSettings():nfs_settings;
         if(nfs_settings == null){
@@ -179,13 +179,13 @@ public class MainActivity extends AppCompatActivity
             totalFilesShouldBeSent++;
         }
         try{
-            Intent mServiceIntent = new Intent(context, SmbSenderServiceAPI.class);
-            mServiceIntent.putCharSequenceArrayListExtra("full-src-paths",fullSrcPaths);
-            mServiceIntent.putCharSequenceArrayListExtra("full-dst-paths",fullDstPaths);
-            mServiceIntent.putExtra("use-smb-as-default",useSmbAsDefault);
+            new Thread() {
+                @Override
+                public void run() {
+                    sendWithSmbProtocol(fullSrcPaths, fullDstPaths);
+                }
+            }.start();
 
-
-            context.startService(mServiceIntent);
 
         }catch (Exception e){
             e.printStackTrace();
@@ -193,91 +193,94 @@ public class MainActivity extends AppCompatActivity
         }
         return 0;
     }
+    private void updateStatus(String filepath,String status) {
 
-    public class SmbSenderServiceAPI extends IntentService {
-        public SmbSenderServiceAPI() {
-            super("ReminderService");
-        }
+        Intent localIntent = new Intent(Constants.BROADCAST_ACTION).putExtra(filepath, status);
+        // Broadcasts the Intent to receivers in this app.
+        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+    }
+    private void sendWithSmbProtocol(ArrayList<CharSequence> fileSrcPaths, ArrayList<CharSequence> fileDstPaths) {
+        try
+        {
 
-        private void updateStatus(String filepath,String status){
-
-            Intent localIntent = new Intent(Constants.BROADCAST_ACTION).putExtra(filepath, status);
-            // Broadcasts the Intent to receivers in this app.
-            LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-        }
-
-
-        @Override
-        protected void onHandleIntent(Intent workIntent)  {
-            final  ArrayList<CharSequence> fileSrcPaths = workIntent.getCharSequenceArrayListExtra("full-src-paths");
-            final  ArrayList<CharSequence> fileDstPaths = workIntent.getCharSequenceArrayListExtra("full-dst-paths");
-            sendWithSmbProtocol(fileSrcPaths,fileDstPaths);
-
-        } // onHandleIntent
-
-        private void sendWithSmbProtocol(ArrayList<CharSequence> fileSrcPaths, ArrayList<CharSequence> fileDstPaths) {
-            try
-            {
-
-                if (Utils.getInstance(context).validateSmbCredintials(nfs_settings))
-                {
-                    for(int i = 0; i<fileSrcPaths.size();i++) {
-                        totalHandled++;
-                        boolean isResultSuccess = false;
-                        String dstfolder = fileDstPaths.get(i).toString();
-                        String filepath = fileSrcPaths.get(i).toString();
-                        Log.v("onHandleIntent", "Will cd to path " + dstfolder);
-
-
-                        try {
-                            if(new NfsAPI(nfs_settings).doesFileExists(dstfolder+"/"+ FilenameUtils.getName(filepath))){
-                                updateStatus(filepath, Constants.STATUS_SENT);
-                                totalFilesAlreadySent++;
-                                continue;
-                            }
-                            new NfsAPI(nfs_settings).nfsCreateDirectoryTree(dstfolder);
-                            Log.v("onHandleIntent", "navigating to dir passed successfully!");
-
-                            String data = filepath;
-                            isResultSuccess = new NfsAPI(nfs_settings).uploadFile(filepath);
-                        }catch (Exception ex){
-                            updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
-                            continue;
-                        }
-                        if (isResultSuccess) {
-                            updateStatus(filepath, Constants.STATUS_SENT);
-                            totalFilesAlreadySent++;
-                            Thread.sleep(10);
-//                        uploadFailing = false;
-                        } else {
-                            updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
-//                        uploadFailing = true;
-                        }
-
-                    }
-                }else{
-                    for(int i = 0; i<fileSrcPaths.size();i++) {
-                        String filepath = fileSrcPaths.get(i).toString();
-                        updateStatus(filepath, Constants.STATUS_FAILED_LOGIN);
-                        totalHandled++;
-                    }
-                }
-            }
-            catch (Exception e)
+            if (Utils.getInstance(context).validateSmbCredintials(nfs_settings))
             {
                 for(int i = 0; i<fileSrcPaths.size();i++) {
+                    totalHandled++;
+                    boolean isResultSuccess = false;
+                    String dstfolder = fileDstPaths.get(i).toString();
                     String filepath = fileSrcPaths.get(i).toString();
-                    updateStatus(filepath,Constants.STATUS_FAILED_CONNECTING);
+                    Log.v("onHandleIntent", "Will cd to path " + dstfolder);
+
+                    String dstfilePath = dstfolder+"/"+ FilenameUtils.getName(filepath);
+                    try {
+
+                        new NfsAPI(nfs_settings).nfsCreateDirectoryTree(dstfolder);
+                        Log.v("onHandleIntent", "navigating to dir passed successfully!");
+
+
+                        isResultSuccess = new NfsAPI(nfs_settings).uploadFile(filepath, dstfilePath, false);
+                    }catch (Exception ex){
+                        updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
+                        continue;
+                    }
+                    if (isResultSuccess) {
+                        updateStatus(filepath, Constants.STATUS_SENT);
+                        totalFilesAlreadySent++;
+                        Thread.sleep(10);
+//                        uploadFailing = false;
+                    } else {
+                        updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
+//                        uploadFailing = true;
+                    }
+
+                }
+            }else{
+                for(int i = 0; i<fileSrcPaths.size();i++) {
+                    String filepath = fileSrcPaths.get(i).toString();
+                    updateStatus(filepath, Constants.STATUS_FAILED_LOGIN);
                     totalHandled++;
                 }
-
-                e.printStackTrace();
-//                uploadFailing = true;
             }
         }
+        catch (Exception e)
+        {
+            for(int i = 0; i<fileSrcPaths.size();i++) {
+                String filepath = fileSrcPaths.get(i).toString();
+                updateStatus(filepath,Constants.STATUS_FAILED_CONNECTING);
+                totalHandled++;
+            }
 
-
+            e.printStackTrace();
+//                uploadFailing = true;
+        }
     }
+
+
+//    public class SmbSenderServiceAPI extends IntentService {
+//        public SmbSenderServiceAPI() {
+//            super("ReminderService");
+//        }
+//
+//        private void updateStatus(String filepath,String status){
+//
+//            Intent localIntent = new Intent(Constants.BROADCAST_ACTION).putExtra(filepath, status);
+//            // Broadcasts the Intent to receivers in this app.
+//            LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+//        }
+//
+//
+//        @Override
+//        protected void onHandleIntent(Intent workIntent)  {
+//            final  ArrayList<CharSequence> fileSrcPaths = workIntent.getCharSequenceArrayListExtra("full-src-paths");
+//            final  ArrayList<CharSequence> fileDstPaths = workIntent.getCharSequenceArrayListExtra("full-dst-paths");
+//            sendWithSmbProtocol(fileSrcPaths,fileDstPaths);
+//
+//        } // onHandleIntent
+//
+//
+//
+//    }
 
     private void loadCategoriesContent() {
 //        new Thread() {
@@ -424,7 +427,7 @@ public class MainActivity extends AppCompatActivity
                 shouldStartRotatingIcon(false);
             }
             if(totalFilesShouldBeSent != 0 && totalHandled == totalFilesShouldBeSent && totalFilesAlreadySent == 0){
-                startNotification("Failed to upload all "+Integer.toString(totalFilesShouldBeSent) +  " Files! Check FTP Configuration or connectivity");
+                startNotification("Failed to upload all "+Integer.toString(totalFilesShouldBeSent) +  " Files! Check Network Configuration or connectivity");
                 shouldStartRotatingIcon(false);
             }
             while (iter.hasNext()) {
@@ -813,9 +816,7 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_manage) {
 
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.shared_fs_scan) {
+        }  else if (id == R.id.shared_fs_scan) {
 
         }
 
