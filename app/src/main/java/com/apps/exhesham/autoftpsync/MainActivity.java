@@ -41,23 +41,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.apps.exhesham.autoftpsync.utils.Constants;
-import com.apps.exhesham.autoftpsync.utils.FTPSettingsNode;
 import com.apps.exhesham.autoftpsync.utils.PathDetails;
-import com.apps.exhesham.autoftpsync.utils.SMBSettingsNode;
-import com.apps.exhesham.autoftpsync.utils.SmbAPI;
+import com.apps.exhesham.autoftpsync.utils.NFSSettingsNode;
+import com.apps.exhesham.autoftpsync.utils.NfsAPI;
 import com.apps.exhesham.autoftpsync.utils.Utils;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.io.Util;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -71,10 +64,9 @@ public class MainActivity extends AppCompatActivity
     static int totalFilesShouldBeSent =0;
     static int totalFilesAlreadySent =0;
     static int totalHandled =0;
-    static boolean isFtpSettingsCorrect = false;
     private Context context;
-    static FTPSettingsNode ftp_settings;
-    static SMBSettingsNode smb_settings;
+
+    static NFSSettingsNode nfs_settings;
     HashMap<String,Integer> total = new HashMap<>();
     HashMap<String,Integer> total_sent = new HashMap<>();
 
@@ -88,8 +80,8 @@ public class MainActivity extends AppCompatActivity
 
         // Set public params
         context = this;
-        ftp_settings = Utils.getInstance(context).getFTPSettings();
-        smb_settings = Utils.getInstance(context).getSMBSettings();
+
+        nfs_settings = Utils.getInstance(context).getSMBSettings();
 
 
         initializeUI();
@@ -103,18 +95,30 @@ public class MainActivity extends AppCompatActivity
 
     private void scanDirectoriesOnDemand(){
         ArraySet<PathDetails> filesToSend = new ArraySet<>();
-        smb_settings = Utils.getInstance(context).getSMBSettings();
-        if(Utils.getInstance(context).validateSmbCredintials(smb_settings)){
+        nfs_settings = Utils.getInstance(context).getSMBSettings();
+        if(nfs_settings == null){
             showSnackBar("Network Settings Incorrect", "Fix", new MyHelpListener(), false);
             return;
         }
-        shouldStartRotatingIcon(true);
-        loadCategoriesContent();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                shouldStartRotatingIcon(true);
+            }
+        });
+        //
+        //-loadCategoriesContent();
         if (totalFilesShouldBeSent !=0 && totalHandled < totalFilesShouldBeSent){
-            Utils.getInstance(context).showAlert(
-                    "Sync process already running. please wait until it finishes",
-                    "Second request",
-                    false);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Utils.getInstance(context).showAlert(
+                            "Sync process already running. please wait until it finishes",
+                            "Second request",
+                            false);
+                }
+            });
+            return;
         }
 
         JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);
@@ -158,12 +162,11 @@ public class MainActivity extends AppCompatActivity
         ArrayList<CharSequence> fullSrcPaths = new ArrayList<>();
         ArrayList<CharSequence> fullDstPaths = new ArrayList<>();
         boolean useSmbAsDefault = ! "false".equals(Utils.getInstance(context).getConfigString("use-ftp-as-default"));
-        if(ftp_settings == null){
-            ftp_settings = Utils.getInstance(context).getFTPSettings();
-        }
-        if(ftp_settings == null){
+        nfs_settings = nfs_settings == null?Utils.getInstance(context).getSMBSettings():nfs_settings;
+        if(nfs_settings == null){
             return -1;
         }
+
         for(PathDetails pd : pdArr){
 
             String calculatedPath = pd.genPathRelativeToDepth();
@@ -172,11 +175,11 @@ public class MainActivity extends AppCompatActivity
                 continue;
             }
             fullSrcPaths.add(pd.getFullpath());
-            fullDstPaths.add(ftp_settings.getDefaultPath() + "/" + calculatedPath);
+            fullDstPaths.add(nfs_settings.getRootPath() + "/" + calculatedPath);
             totalFilesShouldBeSent++;
         }
         try{
-            Intent mServiceIntent = new Intent(context, FtpSenderServiceAPI.class);
+            Intent mServiceIntent = new Intent(context, SmbSenderServiceAPI.class);
             mServiceIntent.putCharSequenceArrayListExtra("full-src-paths",fullSrcPaths);
             mServiceIntent.putCharSequenceArrayListExtra("full-dst-paths",fullDstPaths);
             mServiceIntent.putExtra("use-smb-as-default",useSmbAsDefault);
@@ -191,8 +194,8 @@ public class MainActivity extends AppCompatActivity
         return 0;
     }
 
-    public class FtpSenderServiceAPI extends IntentService {
-        public FtpSenderServiceAPI() {
+    public class SmbSenderServiceAPI extends IntentService {
+        public SmbSenderServiceAPI() {
             super("ReminderService");
         }
 
@@ -202,40 +205,13 @@ public class MainActivity extends AppCompatActivity
             // Broadcasts the Intent to receivers in this app.
             LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
         }
-        private  void ftpCreateDirectoryTree( FTPClient client, String dirTree ) throws IOException {
 
-            boolean dirExists = true;
-
-            //tokenize the string and attempt to change into each directory level.  If you cannot, then start creating.
-            String[] directories = dirTree.split("/");
-            for (String dir : directories ) {
-                if (!dir.isEmpty() ) {
-                    if (dirExists) {
-                        dirExists = client.changeWorkingDirectory(dir);
-                    }
-                    if (!dirExists) {
-                        if (!client.makeDirectory(dir)) {
-                            throw new IOException("Unable to create remote directory '" + dir + "'.  error='" + client.getReplyString()+"'");
-                        }
-                        if (!client.changeWorkingDirectory(dir)) {
-                            throw new IOException("Unable to change into newly created remote directory '" + dir + "'.  error='" + client.getReplyString()+"'");
-                        }
-                    }
-                }
-            }
-        }
 
         @Override
         protected void onHandleIntent(Intent workIntent)  {
             final  ArrayList<CharSequence> fileSrcPaths = workIntent.getCharSequenceArrayListExtra("full-src-paths");
             final  ArrayList<CharSequence> fileDstPaths = workIntent.getCharSequenceArrayListExtra("full-dst-paths");
-            final  boolean useSMB = workIntent.getBooleanExtra("use-smb-as-default", false);
-
-            if(useSMB){
-                sendWithFtpProtocol(fileSrcPaths,fileDstPaths);
-            }else{
-                sendWithSmbProtocol(fileSrcPaths,fileDstPaths);
-            }
+            sendWithSmbProtocol(fileSrcPaths,fileDstPaths);
 
         } // onHandleIntent
 
@@ -243,7 +219,7 @@ public class MainActivity extends AppCompatActivity
             try
             {
 
-                if (Utils.getInstance(context).validateSmbCredintials(smb_settings))
+                if (Utils.getInstance(context).validateSmbCredintials(nfs_settings))
                 {
                     for(int i = 0; i<fileSrcPaths.size();i++) {
                         totalHandled++;
@@ -254,16 +230,16 @@ public class MainActivity extends AppCompatActivity
 
 
                         try {
-                            if(new SmbAPI(smb_settings).doesFileExists(dstfolder+"/"+ FilenameUtils.getName(filepath))){
+                            if(new NfsAPI(nfs_settings).doesFileExists(dstfolder+"/"+ FilenameUtils.getName(filepath))){
                                 updateStatus(filepath, Constants.STATUS_SENT);
                                 totalFilesAlreadySent++;
                                 continue;
                             }
-                            new SmbAPI(smb_settings).smbCreateDirectoryTree(dstfolder);
+                            new NfsAPI(nfs_settings).nfsCreateDirectoryTree(dstfolder);
                             Log.v("onHandleIntent", "navigating to dir passed successfully!");
 
                             String data = filepath;
-                            isResultSuccess = new SmbAPI(smb_settings).uploadFile(filepath);
+                            isResultSuccess = new NfsAPI(nfs_settings).uploadFile(filepath);
                         }catch (Exception ex){
                             updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
                             continue;
@@ -300,88 +276,6 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        private void sendWithFtpProtocol(ArrayList<CharSequence> fileSrcPaths, ArrayList<CharSequence> fileDstPaths) {
-            FTPClient con;
-            try
-            {
-                con = new FTPClient();
-                con.setControlEncoding("UTF-8");
-                con.connect(ftp_settings.getServerurl(), ftp_settings.getPort());
-
-                if (con.login(ftp_settings.getUsername(), ftp_settings.getPassword()))
-                {
-                    if(ftp_settings.isPassive()) {
-                        con.enterLocalPassiveMode(); // important!
-                    }else {
-                        con.enterLocalActiveMode();
-                    }
-                    con.setFileType(FTP.BINARY_FILE_TYPE);
-                    con.setControlKeepAliveTimeout(600);
-                    con.setDataTimeout(1600);
-                    con.setConnectTimeout(1600);
-
-                    for(int i = 0; i<fileSrcPaths.size();i++) {
-                        totalHandled++;
-                        String dstfolder = fileDstPaths.get(i).toString();
-                        String filepath = fileSrcPaths.get(i).toString();
-                        Log.v("onHandleIntent", "Will cd to path " + dstfolder);
-                        boolean result;
-
-                        try {
-                            if(con.listFiles(dstfolder+"/"+ FilenameUtils.getName(filepath)).length>0){
-                                updateStatus(filepath, Constants.STATUS_SENT);
-                                totalFilesAlreadySent++;
-                                continue;
-                            }
-                            ftpCreateDirectoryTree(con, dstfolder);
-                            Log.v("onHandleIntent", "navigating to dir passed successfully!");
-                            con.changeWorkingDirectory(dstfolder);
-                            String data = filepath;
-                            Log.v("FtpSenderServiceAPI", con.getStatus());
-                            FileInputStream in = new FileInputStream(new File(data));
-                            updateStatus(filepath, Constants.STATUS_SENDING);
-                            result = con.storeFile(new File(data).getName(), in);
-                            Log.v("send", Integer.toString(con.getReplyCode()));
-                            Log.v("send", con.getReplyString());
-                            in.close();
-                        }catch (Exception ex){
-                            updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
-                            continue;
-                        }
-                        if (result) {
-                            updateStatus(filepath, Constants.STATUS_SENT);
-                            totalFilesAlreadySent++;
-                            Thread.sleep(10);
-//                        uploadFailing = false;
-                        } else {
-                            updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
-//                        uploadFailing = true;
-                        }
-
-                    }
-                    con.logout();
-                    con.disconnect();
-                }else{
-                    for(int i = 0; i<fileSrcPaths.size();i++) {
-                        String filepath = fileSrcPaths.get(i).toString();
-                        updateStatus(filepath, Constants.STATUS_FAILED_LOGIN);
-                        totalHandled++;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                for(int i = 0; i<fileSrcPaths.size();i++) {
-                    String filepath = fileSrcPaths.get(i).toString();
-                    updateStatus(filepath,Constants.STATUS_FAILED_CONNECTING);
-                    totalHandled++;
-                }
-
-                e.printStackTrace();
-//                uploadFailing = true;
-            }
-        }
-
 
     }
 
@@ -391,7 +285,7 @@ public class MainActivity extends AppCompatActivity
         //Show loading...
         final ProgressDialog progressDialog = ProgressDialog.show(context, "Loading Categories", "Please wait.");
         resetCounters();
-        runOnUiThread(new Thread() {
+        new Thread() {
 
             @Override
             public void run() {
@@ -431,10 +325,18 @@ public class MainActivity extends AppCompatActivity
                         e.printStackTrace();
                     }
                 }
-                updateCounters();
+
                 progressDialog.dismiss();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateCounters();
+                    }
+                });
+
             }
-        });
+        }.start();
+
 
 //            }
 //        }.start();
@@ -462,139 +364,17 @@ public class MainActivity extends AppCompatActivity
         void callback(); // would be in any signature
     }
 
-    private void testFtpConnect(final Callback callback) {
-        if(ftp_settings == null){
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Utils.getInstance(context).showAlert(
-                            "Please go to settings and configure an FTP Server.",
-                            "FTP Configuration missing",
-                            false);
-                }
-            });
-            if(callback != null){
-                callback.callback();
-            }
-            return;
-        }
-        final ProgressDialog progressDialog = ProgressDialog.show(this, "Checking FTP Settings", "Please wait. Checking ftp connectivity and settings correctness...");
-        new Thread() {
-            public void run() {
-                try  {
 
-                    try
-                    {
-                        final FTPClient con = new FTPClient();
-                        con.setConnectTimeout(Constants.TEST_CONNECT_TIMEOUT_MS);
-                        con.setDefaultTimeout(Constants.TEST_CONNECT_TIMEOUT_MS);
-                        con.connect(ftp_settings.getServerurl(), ftp_settings.getPort());
-
-                        if (con.login(ftp_settings.getUsername(), ftp_settings.getPassword()))
-                        {
-                            if(ftp_settings.isPassive()) {
-                                con.enterLocalPassiveMode(); // important!
-                            }else {
-                                con.enterLocalActiveMode();
-                            }
-                            con.setFileType(FTP.BINARY_FILE_TYPE);
-
-                            if(!con.changeWorkingDirectory(ftp_settings.getDefaultPath())){
-                                String dirTree = ftp_settings.getDefaultPath();
-                                try {
-                                    boolean dirExists = true;
-
-                                    //tokenize the string and attempt to change into each directory level.  If you cannot, then start creating.
-                                    String[] directories = dirTree.split("/");
-                                    for (String dir : directories ) {
-                                        if (!dir.isEmpty() ) {
-                                            if (dirExists) {
-                                                dirExists = con.changeWorkingDirectory(dir);
-                                            }
-                                            if (!dirExists) {
-                                                if (!con.makeDirectory(dir)) {
-                                                    throw new IOException("Unable to create remote directory '" + dir + "'.  error='" + con.getReplyString()+"'");
-                                                }
-                                                if (!con.changeWorkingDirectory(dir)) {
-                                                    throw new IOException("Unable to change into newly created remote directory '" + dir + "'.  error='" + con.getReplyString()+"'");
-                                                }
-                                            }
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            Utils.getInstance(context).showAlert(
-                                                    "The FTP default path " +  ftp_settings.getDefaultPath() + " Cannot be created. please choose available root path",
-                                                    "FTP Configuration Error",
-                                                    false);
-                                        }
-                                    });
-                                    isFtpSettingsCorrect = false;
-                                }
-
-                            }
-                            isFtpSettingsCorrect = true;
-                            con.logout();
-                            con.disconnect();
-                        }else{
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Utils.getInstance(context).showAlert(
-                                            "The user name or password are incorrect!",
-                                            "FTP Configuration error",
-                                            false);
-                                }
-                            });
-
-                            isFtpSettingsCorrect = false;
-                        }
-
-                    }
-                    catch (final Exception e)
-                    {
-                        e.printStackTrace();
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Utils.getInstance(context).showAlert(
-                                        "faulty connectivity...Failed to connect to server - ftp cannot be reached",
-                                        "FTP Configuration error",
-                                        false);
-                            }
-                        });
-
-                        isFtpSettingsCorrect = false;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    isFtpSettingsCorrect = false;
-                }
-                // dismiss the progress dialog
-                progressDialog.dismiss();
-                // DO Any Callback
-                if(callback != null){
-                    callback.callback();
-                }
-            }
-        }.start();
-    }
-
-    private void testSmbConnect(final Callback callback) {
-        if(smb_settings == null){
+    private void testSmbConnect(final Callback successCallback) {
+        nfs_settings = Utils.getInstance(context).getSMBSettings();
+        if(nfs_settings == null){
             showSnackBar("Please Configure Network Storage Settings", "Config", new MyHelpListener(), true);
-            if(callback != null){
-                callback.callback();
-            }
             return;
         }
         final ProgressDialog progressDialog = ProgressDialog.show(this, "Checking Network Storage Settings", "Please wait. Checking network connectivity and settings correctness...");
         new Thread() {
             public void run() {
-                if(! Utils.getInstance(context).validateSmbCredintials(smb_settings)){
+                if(! Utils.getInstance(context).validateSmbCredintials(nfs_settings)){
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -604,6 +384,10 @@ public class MainActivity extends AppCompatActivity
                                     false);
                         }
                     });
+                }else{
+                    if(successCallback != null){
+                        successCallback.callback();
+                    }
                 }
 
                 progressDialog.dismiss();
@@ -662,18 +446,22 @@ public class MainActivity extends AppCompatActivity
         }
     }
     private void shouldStartRotatingIcon(final boolean start){
-        int color = Color.parseColor("#00E506");
-        if(!start){
-            color = Color.parseColor("#FFF1F9");
-        }
-        final PorterDuffColorFilter colorFilter = new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP);
-        ActionMenuItemView iv = (ActionMenuItemView )findViewById(R.id.follow_status);
-        iv.getCompoundDrawables()[0].setColorFilter(colorFilter);
+        final int color = !start ? Color.parseColor("#FFF1F9"): Color.parseColor("#00E506");
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                final PorterDuffColorFilter colorFilter = new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP);
+                ActionMenuItemView iv = (ActionMenuItemView )findViewById(R.id.follow_status);
+                iv.getCompoundDrawables()[0].setColorFilter(colorFilter);
+            }
+        });
+
     }
 
     public void viewFileSystem(MenuItem item){
         try{
-            Intent k = new Intent(MainActivity.this, PhoneFileSystem.class);
+            Intent k = new Intent(MainActivity.this, DeviceFileSystemActivity.class);
             startActivityForResult(k,1);
         }catch (Exception ex){
             Log.getStackTraceString(ex);
@@ -682,7 +470,7 @@ public class MainActivity extends AppCompatActivity
 
     public void viewSharedFS(MenuItem item){
         try{
-            Intent k = new Intent(MainActivity.this, NetworkFsSettings.class);
+            Intent k = new Intent(MainActivity.this, NfsSettingsActivity.class);
             startActivityForResult(k,1);
         }catch (Exception ex){
             Log.getStackTraceString(ex);
@@ -690,7 +478,7 @@ public class MainActivity extends AppCompatActivity
     }
     public void viewFollowedDirs(MenuItem item){
         try{
-            Intent k = new Intent(MainActivity.this, ListFollowedDirs.class);
+            Intent k = new Intent(MainActivity.this, ListFollowedDirsActivity.class);
             startActivityForResult(k,1);
         }catch (Exception ex){
             Log.getStackTraceString(ex);
@@ -698,7 +486,7 @@ public class MainActivity extends AppCompatActivity
     }
     public void viewRules(MenuItem item){
         try{
-            Intent k = new Intent(MainActivity.this, Rules.class);
+            Intent k = new Intent(MainActivity.this, RulesActivity.class);
             startActivityForResult(k,1);
         }catch (Exception ex){
             Log.getStackTraceString(ex);
@@ -706,15 +494,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void scanDirectories(MenuItem item){
-        testFtpConnect(new Callback() {
+        testSmbConnect(new Callback() {
             @Override
             public void callback() {
-                runOnUiThread(new Runnable() {
+                new Thread() {
                     @Override
                     public void run() {
                         scanDirectoriesOnDemand();
                     }
-                });
+                }.start();
             }
         });
     }
@@ -837,9 +625,9 @@ public class MainActivity extends AppCompatActivity
 
         setCategoriesStatus();
     }
-    public void viewSettings(MenuItem item) {
+    public void viewNfsSettings(MenuItem item) {
         try{
-            Intent k = new Intent(MainActivity.this, FTPSettings.class);
+            Intent k = new Intent(MainActivity.this, NfsSettingsActivity.class);
             startActivityForResult(k,1);
         }catch (Exception ex){
             Log.getStackTraceString(ex);
@@ -847,7 +635,7 @@ public class MainActivity extends AppCompatActivity
     }
     public void help(MenuItem item) {
         try{
-            Intent k = new Intent(MainActivity.this, Help.class);
+            Intent k = new Intent(MainActivity.this, HelpActivity.class);
             startActivity(k);
         }catch (Exception ex){
             Log.getStackTraceString(ex);
@@ -1105,7 +893,7 @@ public class MainActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         switch(requestCode) {
             case (1) : {
-                ftp_settings = Utils.getInstance(context).getFTPSettings();
+                nfs_settings = Utils.getInstance(context).getSMBSettings();
 
             }
         }
@@ -1115,7 +903,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onClick(View v) {
             try{
-                Intent k = new Intent(MainActivity.this, NetworkFsSettings.class);
+                Intent k = new Intent(MainActivity.this, NfsSettingsActivity.class);
                 startActivityForResult(k,1);
             }catch (Exception ex){
                 Log.getStackTraceString(ex);

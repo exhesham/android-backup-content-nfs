@@ -10,7 +10,7 @@ import android.text.format.Formatter;
 import android.util.Log;
 import android.widget.EditText;
 
-import com.apps.exhesham.autoftpsync.Rules;
+import com.apps.exhesham.autoftpsync.RulesActivity;
 
 import org.apache.commons.io.FilenameUtils;
 import org.json.JSONArray;
@@ -188,19 +188,15 @@ public class Utils {
         storeConfigString(Constants.DB_FOLLOWED_DIRS,ja.toString());
     }
 
-    public SMBSettingsNode getSMBSettings() {
-        String availableFTPS = Utils.getInstance(myContext).getConfigString(Constants.DB_SMB_SETTINGS);
-        JSONObject jo;
-        if ( availableFTPS == null || availableFTPS.equals("")){
+    public NFSSettingsNode getSMBSettings() {
+        String nfsserver = Utils.getInstance(null).getConfigString(Constants.DB_SMB_SERVER);
+        String defaultpath = Utils.getInstance(null).getConfigString(Constants.DB_SMB_DEFAULT_PATH);
+        String nfsusername = Utils.getInstance(null).getConfigString(Constants.DB_SMB_USERNAME);
+        String nfspassword = Utils.getInstance(null).getConfigString(Constants.DB_SMB_PASSWORD);
+        if (nfsserver.equals("") || defaultpath.equals("")){
             return null;
         }else{
-            try {
-                jo = new JSONObject(availableFTPS);
-                return  SMBSettingsNode.parseJSON(jo);
-            } catch (JSONException e) {
-                e.printStackTrace();
-                return  null;
-            }
+            return  new NFSSettingsNode(nfsusername,nfspassword,nfsserver,defaultpath);
         }
     }
 
@@ -291,7 +287,7 @@ public class Utils {
         return  shouldFollow ;
     }
 
-    public boolean validateSmbCredintials(SMBSettingsNode smb_settings) {
+    public boolean validateSmbCredintials(NFSSettingsNode smb_settings) {
         if (smb_settings == null){
             return false;
         }
@@ -315,15 +311,15 @@ public class Utils {
                 }
 
             }
-
             System.out.println("Done!");
-            return true;
+
         } catch (IOException e) {
             // do something
             e.printStackTrace();
             System.out.println(e.getMessage());
+            return false;
         }
-        return false;
+        return true;
     }
 
     public static class FileSysAPI {
@@ -339,7 +335,7 @@ public class Utils {
                 if(f.isDirectory()){
                     pdArray.addAll(getFoldersRecursiveAux(f.getAbsolutePath(),depth+1));
                 }else{
-                    if(!new Rules().shouldIgnoreFile(f.getAbsolutePath())){
+                    if(!new RulesAPI().shouldIgnoreFile(f.getAbsolutePath())){
                         pdArray.add(new PathDetails(f,depth));
                     }
                 }

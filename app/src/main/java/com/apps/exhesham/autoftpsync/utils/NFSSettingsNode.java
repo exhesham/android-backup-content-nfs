@@ -6,8 +6,8 @@ import org.json.JSONObject;
  * Created by hesham on 6/5/2017.
  */
 
-public class SMBSettingsNode {
-    public SMBSettingsNode(String username, String password, String serverurl, String rootdir) {
+public class NFSSettingsNode {
+    public NFSSettingsNode(String username, String password, String serverurl, String rootdir) {
         setPassword(password);
         setRootPath(rootdir);
         setServerurl(serverurl);
@@ -51,7 +51,4 @@ public class SMBSettingsNode {
     private String rootPath;
     private String serverurl;
 
-    public static SMBSettingsNode parseJSON(JSONObject smbSettingsJson) {
-        return null;
-    }
 }

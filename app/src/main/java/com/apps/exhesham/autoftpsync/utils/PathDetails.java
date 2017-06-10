@@ -1,6 +1,6 @@
 package com.apps.exhesham.autoftpsync.utils;
 
-import com.apps.exhesham.autoftpsync.Rules;
+import com.apps.exhesham.autoftpsync.RulesActivity;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -103,7 +103,7 @@ public class PathDetails {
 
         if(!isDirectory()){
             String extension = FilenameUtils.getExtension(getFullpath());
-            String folderName = new Rules().getExtensionFolder(extension);
+            String folderName = new RulesAPI().getExtensionFolder(extension);
             if(folderName != null){
                 return folderName;
             }else{

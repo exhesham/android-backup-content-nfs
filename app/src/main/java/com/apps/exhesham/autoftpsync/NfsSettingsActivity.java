@@ -12,16 +12,18 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.apps.exhesham.autoftpsync.utils.Constants;
-import com.apps.exhesham.autoftpsync.utils.SMBSettingsNode;
+import com.apps.exhesham.autoftpsync.utils.NFSSettingsNode;
+import com.apps.exhesham.autoftpsync.utils.NfsAPI;
 import com.apps.exhesham.autoftpsync.utils.Utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFileOutputStream;
 
-public class NetworkFsSettings extends AppCompatActivity {
+public class NfsSettingsActivity extends AppCompatActivity {
     private Context context;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,13 +32,14 @@ public class NetworkFsSettings extends AppCompatActivity {
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
-        setContentView(R.layout.activity_shared_storage_file_sys);
+        setContentView(R.layout.activity_nfs);
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.smb_settings_toolbar);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         fillSettings();
+
     }
     private void fillSettings(){
         TextView usernameTV = (TextView) findViewById(R.id.text_username);
@@ -51,26 +54,31 @@ public class NetworkFsSettings extends AppCompatActivity {
         if(defaultAddress.equals("")){
             defaultAddress = Utils.getInstance(context).getDefaultGatewayAddress();
         }
-        if(! defaultPath.equals("")){
-            defaultpathTV.setText(defaultPath);
-        }
+
         if(username.equals("") && password.equals("")) {
-            if (Utils.getInstance(context).validateSmbCredintials(new SMBSettingsNode("admin", "admin", defaultAddress, ""))) {
+            if (Utils.getInstance(context).validateSmbCredintials(new NFSSettingsNode("admin", "admin", defaultAddress, ""))) {
                 username = "admin";
                 password = "admin";
             }
-            if (Utils.getInstance(context).validateSmbCredintials(new SMBSettingsNode("root", "root", defaultAddress, ""))) {
+            if (Utils.getInstance(context).validateSmbCredintials(new NFSSettingsNode("root", "root", defaultAddress, ""))) {
                 username = "root";
                 password = "root";
             }
-            if (Utils.getInstance(context).validateSmbCredintials(new SMBSettingsNode("", "", defaultAddress, ""))) {
+            if (Utils.getInstance(context).validateSmbCredintials(new NFSSettingsNode("", "", defaultAddress, ""))) {
                 username = "";
                 password = "";
             }
         }
+        if ("".equals(defaultPath)) {
+            // UI thread is needed in order to load the categories
+            refreshPath(null);
+        }else {
+            defaultpathTV.setText(defaultPath);
+        }
         usernameTV.setText(username);
         passwordTV.setText(password);
         serverurlTV.setText(defaultAddress);
+
 
 
     }
@@ -94,13 +102,13 @@ public class NetworkFsSettings extends AppCompatActivity {
         mySnackbar.setAction(undo, listener);
         mySnackbar.show();
     }
-    public void validateSmbSettings(MenuItem item) {
+    public void validateNfsSettings(MenuItem item) {
         TextView usernameTV = (TextView) findViewById(R.id.text_username);
         TextView passwordTV = (TextView) findViewById(R.id.text_password);
         TextView serverurlTV = (TextView) findViewById(R.id.text_server);
         TextView defaultpathTV = (TextView) findViewById(R.id.text_defaultpath);
-
-        if (! Utils.getInstance(context).validateSmbCredintials(new SMBSettingsNode(usernameTV.getText().toString(),
+        //TODO: Should start on thread and do a blocking progress wheel
+        if (! Utils.getInstance(context).validateSmbCredintials(new NFSSettingsNode(usernameTV.getText().toString(),
                 passwordTV.getText().toString(),
                 serverurlTV.getText().toString(),
                 defaultpathTV.getText().toString()
@@ -135,37 +143,46 @@ public class NetworkFsSettings extends AppCompatActivity {
         }
 
     }
-    public static void readDir(String dirname){
-        try{
-            String path = "smb://192.168.1.1/" + dirname;
-            String user = "exhesham:fenderHrod11";
-            NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(user);
 
-            SmbFile sFile = new SmbFile(path, auth);
-            for (SmbFile child : sFile.listFiles()){
-                System.out.println(child.getCanonicalPath());
-                if(child.isDirectory()){
-                    System.out.println("->Directory:" + child.isDirectory());
-                    System.out.println("->Free Space:" + humanReadableByteCount(child.getDiskFreeSpace(),false));
-                    System.out.println("->Can Write:" + child.canWrite());
-                    System.out.println("->Name:" + child.getName());
-                    System.out.println("------------------------------------");
+    public void refreshPath(View view) {
+        try {
+
+            TextView usernameTV = (TextView) findViewById(R.id.text_username);
+            TextView passwordTV = (TextView) findViewById(R.id.text_password);
+            TextView serverurlTV = (TextView) findViewById(R.id.text_server);
+            final String nfsUsername = usernameTV.getText().toString();
+            final String nfsPassword = passwordTV.getText().toString();
+            final String nfsDefaultAddress = serverurlTV.getText().toString();
+            new Thread() {
+
+                @Override
+                public void run() {
+
+                    ArrayList<String> possibleRootDir = new NfsAPI(new NFSSettingsNode(nfsUsername, nfsPassword, nfsDefaultAddress, "")).nfsGetRootDir();
+                    if (possibleRootDir.size() > 0) {
+                        final String availablePath = possibleRootDir.get(0);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                TextView defaultpathTV = (TextView) findViewById(R.id.text_defaultpath);
+                                defaultpathTV.setText(availablePath);
+                            }
+                        });
+
+                    }
+
                 }
+            }.start();
 
-            }
-
-            System.out.println("Done!");
-        } catch (IOException e) {
-            // do something
+        } catch (Exception e) {
             e.printStackTrace();
-            System.out.println(e.getMessage());
         }
-
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.smb_settings_toolbar, menu);
+        getMenuInflater().inflate(R.menu.nfs_settings_toolbar, menu);
         return true;
     }
     public class MyHelpListener implements View.OnClickListener{
@@ -176,4 +193,5 @@ public class NetworkFsSettings extends AppCompatActivity {
             // Code to undo the user's last action
         }
     }
+
 }

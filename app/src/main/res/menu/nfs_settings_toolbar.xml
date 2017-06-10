@@ -2,15 +2,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_smb_save"
+        android:id="@+id/action_nfs_save"
         android:icon="@android:drawable/ic_menu_save"
         android:title="Save Settings"
         android:onClick="saveSmbSettings"
         app:showAsAction="always"/>
     <item
-        android:id="@+id/action_smb_validate"
+        android:id="@+id/action_nfs_validate"
         android:icon="@drawable/validate_settings"
         android:title="Validate Settings"
-        android:onClick="validateSmbSettings"
+        android:onClick="validateNfsSettings"
         app:showAsAction="always"/>
 </menu>

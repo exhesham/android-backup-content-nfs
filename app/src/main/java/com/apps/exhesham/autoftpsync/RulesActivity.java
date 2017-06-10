@@ -21,6 +21,7 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.apps.exhesham.autoftpsync.utils.Constants;
+import com.apps.exhesham.autoftpsync.utils.RulesAPI;
 import com.apps.exhesham.autoftpsync.utils.Utils;
 
 import org.apache.commons.io.FilenameUtils;
@@ -31,13 +32,13 @@ import org.json.JSONObject;
 import java.util.Arrays;
 
 
-public class Rules extends AppCompatActivity {
+public class RulesActivity extends AppCompatActivity {
     private Context context;
 
     public ArrayMap<String,String> getFollowedRules() {
         if(_followed_rules == null){
             Log.v("read rules", " Reading rules");
-            _followed_rules = readRules();
+            _followed_rules = new RulesAPI().readRules();
         }
         return _followed_rules;
     }
@@ -70,62 +71,6 @@ public class Rules extends AppCompatActivity {
         return true;
     }
 
-    private ArrayMap<String,String> readRules(){
-        boolean shouldUpdateDB = false;
-        JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB("rules");
-        JSONObject version =  Utils.getInstance(context).getJsonObjFromDB(Constants.DB_FOLLOWED_DIRS);
-        if(version == null || ja.length() == 0){
-            /*If the version is not identified then for sure it is not version 3, then reformat the available data*/
-            ja = new JSONArray();
-            shouldUpdateDB = true;
-        }
-        if(ja.length() == 0){
-            try {
-                for(String ext : Constants.PHOTOS_CATERGORY_EXTS){
-                    ja.put(new JSONObject().put("extension",ext).put("folder_name","photos").put("status",Constants.FOLLOWING_DIR).put("category","photos"));
-                }
-                for(String ext : Constants.COMPRESSED_CATERGORY_EXTS){
-                    ja.put(new JSONObject().put("extension",ext).put("folder_name","compressed").put("status",Constants.FOLLOWING_DIR).put("category","compressed"));
-                }
-                for(String ext : Constants.DOCUMENTS_CATERGORY_EXTS){
-                    ja.put(new JSONObject().put("extension",ext).put("folder_name","documents").put("status",Constants.FOLLOWING_DIR).put("category","documents"));
-                }
-                for(String ext : Constants.MUSIC_CATERGORY_EXTS){
-                    ja.put(new JSONObject().put("extension",ext).put("folder_name","music").put("status",Constants.FOLLOWING_DIR).put("category","music"));
-                }
-                for(String ext : Constants.VIDEO_CATERGORY_EXTS){
-                    ja.put(new JSONObject().put("extension",ext).put("folder_name","videos").put("status",Constants.FOLLOWING_DIR).put("category","videos"));
-                }
-                for(String ext : Constants.APPS_CATERGORY_EXTS){
-                    ja.put(new JSONObject().put("extension",ext).put("folder_name","apps").put("status",Constants.FOLLOWING_DIR).put("category","apps"));
-                }
-
-//                ja.put(new JSONObject().put("extension","*").put("folder_name","others"));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        ArrayMap<String, String> rules = new ArrayMap<>();
-        for (int i = 0;i < ja.length();i++) {
-            try {
-                String foldername = ja.getJSONObject(i).getString("folder_name");
-                String extension = ja.getJSONObject(i).getString("extension");
-                if(!ja.getJSONObject(i).has("status")){
-                    ja.getJSONObject(i).put("status",Constants.FOLLOWING_DIR);
-                }
-                String status = ja.getJSONObject(i).getString("status");
-                if(Constants.FOLLOWING_DIR.equals(status)){
-                    rules.put(extension,foldername);
-                }
-            } catch (JSONException e) {
-                continue;
-            }
-        }
-        if(shouldUpdateDB){
-            Utils.getInstance(context).storeConfigString("rules",ja.toString());
-        }
-        return  rules;
-    }
 
     public void deleteRules(MenuItem item){
         TableLayout ll = (TableLayout) findViewById(R.id.table_rules);
@@ -283,17 +228,7 @@ public class Rules extends AppCompatActivity {
         ll.addView(defaultRow);
     }
 
-    public String getExtensionFolder(String extension) {
-        ArrayMap<String, String> rules = readRules();
-        if(rules.containsKey(extension.toLowerCase())){
-            return rules.get(extension);
-        }
-        if(rules.containsKey("*") && rules.get("*").equals("<IGNORE FILE>")){
 
-            return null;
-        }
-        return rules.get("*");
-    }
 
 
     private void showDialog(final String extension, final String foldername){
@@ -353,9 +288,5 @@ public class Rules extends AppCompatActivity {
         });
         commentDialog.show();
     }
-    public boolean shouldIgnoreFile(String path) {
-        String extension = FilenameUtils.getExtension(path);
-        String folderName = getExtensionFolder(extension);
-        return folderName == null;
-    }
+
 }

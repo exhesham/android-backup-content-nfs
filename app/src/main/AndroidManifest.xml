@@ -17,7 +17,7 @@
         android:theme="@style/AppTheme.NoActionBar">
 
         <activity
-            android:name=".FTPSettings"
+            android:name=".FTPSettingsActivity"
             android:label=""
             android:parentActivityName=".MainActivity">
             <meta-data
@@ -35,7 +35,7 @@
         </service>
 
         <activity
-            android:name=".Help"
+            android:name=".HelpActivity"
             android:label=""
             android:parentActivityName=".MainActivity">
             <meta-data
@@ -43,7 +43,7 @@
                 android:value="com.apps.exhesham.autoftpsync.MainActivity" />
         </activity>
         <activity
-            android:name=".Rules"
+            android:name=".RulesActivity"
             android:label="@string/title_activity_rules"
             android:parentActivityName=".MainActivity"
             >
@@ -52,7 +52,7 @@
                 android:value="com.apps.exhesham.autoftpsync.MainActivity" />
         </activity>
         <activity
-            android:name=".ListFollowedDirs"
+            android:name=".ListFollowedDirsActivity"
             android:label="Pinned Folders"
             android:parentActivityName=".MainActivity">
             <meta-data
@@ -60,7 +60,7 @@
                 android:value="com.apps.exhesham.autoftpsync.MainActivity" />
         </activity>
         <activity
-            android:name=".PhoneFileSystem"
+            android:name=".DeviceFileSystemActivity"
             android:label="Phone File System"
             android:parentActivityName=".MainActivity"
             >
@@ -69,7 +69,7 @@
                 android:value="com.apps.exhesham.autoftpsync.MainActivity" />
         </activity>
 
-        <activity android:name=".NetworkFsSettings"
+        <activity android:name=".NfsSettingsActivity"
             android:label="SMB Settings"
             android:parentActivityName=".MainActivity"
             >

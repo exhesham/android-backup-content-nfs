@@ -22,7 +22,7 @@ import org.json.JSONObject;
 /**
  * A login screen that offers login via email/password.
  */
-public class FTPSettings extends AppCompatActivity{
+public class FTPSettingsActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

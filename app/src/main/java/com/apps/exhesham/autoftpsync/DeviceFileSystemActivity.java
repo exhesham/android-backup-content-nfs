@@ -25,7 +25,7 @@ import java.util.ArrayList;
 
 
 @SuppressLint("NewApi")
-public class PhoneFileSystem extends AppCompatActivity {
+public class DeviceFileSystemActivity extends AppCompatActivity {
     private String currPath = Constants.DEFAULT_PATH;
     private Context context;
     static FTPSettingsNode ftpnode;

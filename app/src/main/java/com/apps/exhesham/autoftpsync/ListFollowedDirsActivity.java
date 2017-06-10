@@ -25,7 +25,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class ListFollowedDirs extends AppCompatActivity {
+public class ListFollowedDirsActivity extends AppCompatActivity {
     private Context context;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
