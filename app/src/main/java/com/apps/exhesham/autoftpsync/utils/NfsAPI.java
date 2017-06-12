@@ -33,12 +33,37 @@ public class NfsAPI {
     }
 
     public boolean doesFileExists(String filepath) {
-        //TODO: Implement
-        return false;
+        try {
+            filepath = filepath.replace("//", "/");
+            String user = settings.getUsername() + ":" + settings.getPassword();
+            NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(user);
+            //String path = "smb://192.168.1.1/samsung/test.txt";
+            String path = "smb://" + settings.getServerurl() + "/" + filepath;
+            SmbFile sFile = new SmbFile(path, auth);
+            if (sFile.exists()) {
+                return true;
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+
+        }
+        return  false;
     }
 
     public void nfsCreateDirectoryTree(String dstfolder) {
-        //TODO: Implement
+        try {
+            dstfolder = dstfolder.replace("//", "/");
+            String user = settings.getUsername() + ":" + settings.getPassword();
+            NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(user);
+            //String path = "smb://192.168.1.1/samsung/test.txt";
+            String path = "smb://" + settings.getServerurl() + "/" + dstfolder;
+            SmbFile sFile = new SmbFile(path, auth);
+            if ( !sFile.exists()){
+                sFile.mkdirs();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     public boolean uploadFile(String filepathOnDevice, String filepathOnNfs, boolean overrideIfExists) {
@@ -49,7 +74,7 @@ public class NfsAPI {
             //String path = "smb://192.168.1.1/samsung/test.txt";
             String path = "smb://" + settings.getServerurl() +"/"+ filepathOnNfs;
             SmbFile sFile = new SmbFile(path, auth);
-            if(sFile.exists() && ! overrideIfExists){
+            if( sFile.exists() && ! overrideIfExists && sFile.length() != 0){
                 return true;
             }
             SmbFileOutputStream sfos = new SmbFileOutputStream(sFile);
@@ -107,7 +132,7 @@ public class NfsAPI {
             NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(user);
 
             SmbFile sFile = new SmbFile(path, auth);
-            sFile.setConnectTimeout(Constants.TEST_CONNECT_TIMEOUT_MS);
+//            sFile.setConnectTimeout(Constants.TEST_CONNECT_TIMEOUT_MS);
             for (SmbFile child : sFile.listFiles()){
                 System.out.println(child.getCanonicalPath());
                 if(child.isDirectory() && child.getDiskFreeSpace() > 0){

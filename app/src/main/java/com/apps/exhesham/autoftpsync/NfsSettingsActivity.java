@@ -92,6 +92,7 @@ public class NfsSettingsActivity extends AppCompatActivity {
         Utils.getInstance(context).storeConfigString(Constants.DB_SMB_DEFAULT_PATH, defaultpathTV.getText().toString());
         Utils.getInstance(context).storeConfigString(Constants.DB_SMB_USERNAME,usernameTV.getText().toString());
         Utils.getInstance(context).storeConfigString(Constants.DB_SMB_PASSWORD, passwordTV.getText().toString());
+        finishActivity(0);
     }
     private void showSnackBar(String msg, String undo, View.OnClickListener listener){
         //TODO: Move to utils

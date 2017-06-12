@@ -100,12 +100,7 @@ public class MainActivity extends AppCompatActivity
             showSnackBar("Network Settings Incorrect", "Fix", new MyHelpListener(), false);
             return;
         }
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                shouldStartRotatingIcon(true);
-            }
-        });
+
         //
         //-loadCategoriesContent();
         if (totalFilesShouldBeSent !=0 && totalHandled < totalFilesShouldBeSent){
@@ -412,6 +407,7 @@ public class MainActivity extends AppCompatActivity
         /*
          * Handle Intents here.
          */
+            //TODO: Add Progress Bar
             Log.v ("Receive","On receive");
             /*
              * Gets the status from the Intent's extended data, and chooses the appropriate action
@@ -497,6 +493,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void scanDirectories(MenuItem item){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                shouldStartRotatingIcon(true);
+            }
+        });
         testSmbConnect(new Callback() {
             @Override
             public void callback() {

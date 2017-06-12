@@ -21,109 +21,126 @@
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/AppTheme.NoActionBar.PopupOverlay" />
 
+        <TextView
+            android:text="After you fill the username, password and server correctly, you can load the path."
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/textView4"
+            android:layout_weight="1"
+            tools:text="After you fill the username, password and server correctly, you can load the path."
+            android:contentDescription="After you fill the username, password and server correctly, you can load the path." />
+
     </android.support.design.widget.AppBarLayout>
 
     <LinearLayout
         android:orientation="vertical"
-        android:paddingTop="66dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ScrollView
-            android:id="@+id/settings_form"
+        <LinearLayout
+            android:orientation="vertical"
+            android:paddingTop="66dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <LinearLayout
-                android:id="@+id/email_login_form"
+            <ScrollView
+                android:id="@+id/settings_form"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_height="match_parent">
 
-
-                <android.support.design.widget.TextInputLayout
+                <LinearLayout
+                    android:id="@+id/email_login_form"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
-                    <AutoCompleteTextView
-                        android:id="@+id/text_username"
+
+                    <android.support.design.widget.TextInputLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Username"
-                        android:inputType="text"
-                        android:maxLines="1"
-                        android:singleLine="true" />
-
-                </android.support.design.widget.TextInputLayout>
-
-                <android.support.design.widget.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <EditText
-                        android:id="@+id/text_password"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/prompt_password"
-                        android:imeActionId="@+id/login"
-                        android:imeActionLabel="@string/action_sign_in_short"
-                        android:imeOptions="actionUnspecified"
-                        android:inputType="textPassword"
-                        android:maxLines="1"
-                        android:singleLine="true" />
-
-                </android.support.design.widget.TextInputLayout>
-
-                <android.support.design.widget.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <AutoCompleteTextView
-                        android:id="@+id/text_server"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Network Server"
-                        android:inputType="textUri"
-                        android:maxLines="1"
-                        android:singleLine="true" />
-
-                </android.support.design.widget.TextInputLayout>
-
-
-
-                <android.support.design.widget.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1">
+                        android:layout_height="wrap_content">
 
                         <AutoCompleteTextView
-                            android:id="@+id/text_defaultpath"
-                            android:layout_width="339dp"
+                            android:id="@+id/text_username"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Default backup path"
+                            android:hint="Username"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:singleLine="true" />
+
+                    </android.support.design.widget.TextInputLayout>
+
+                    <android.support.design.widget.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/text_password"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/prompt_password"
+                            android:imeActionId="@+id/login"
+                            android:imeActionLabel="@string/action_sign_in_short"
+                            android:imeOptions="actionUnspecified"
+                            android:inputType="textPassword"
+                            android:maxLines="1"
+                            android:singleLine="true" />
+
+                    </android.support.design.widget.TextInputLayout>
+
+                    <android.support.design.widget.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/text_server"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Network Server"
                             android:inputType="textUri"
                             android:maxLines="1"
                             android:singleLine="true" />
 
-                        <ImageButton
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            app:srcCompat="@drawable/ic_sync_black_24dp"
-                            android:id="@+id/refresh_paths_button"
-                            android:onClick="refreshPath"
-                            android:layout_weight="1" />
-                    </LinearLayout>
-
-                </android.support.design.widget.TextInputLayout>
+                    </android.support.design.widget.TextInputLayout>
 
 
-            </LinearLayout>
-        </ScrollView>
+
+                    <android.support.design.widget.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <LinearLayout
+                            android:orientation="horizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/text_defaultpath"
+                                android:layout_width="285dp"
+                                android:layout_height="wrap_content"
+                                android:hint="Default backup path"
+                                android:inputType="textUri"
+                                android:maxLines="1"
+                                android:singleLine="true" />
+
+                            <ImageButton
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                app:srcCompat="@drawable/ic_sync_black_24dp"
+                                android:id="@+id/refresh_paths_button"
+                                android:onClick="refreshPath"
+                                android:layout_weight="1" />
+                        </LinearLayout>
+
+                    </android.support.design.widget.TextInputLayout>
+
+
+                </LinearLayout>
+            </ScrollView>
+
+        </LinearLayout>
 
     </LinearLayout>
+
 </android.support.design.widget.CoordinatorLayout>
