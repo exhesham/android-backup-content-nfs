@@ -51,4 +51,13 @@ public class NFSSettingsNode {
     private String rootPath;
     private String serverurl;
 
+    @Override
+    public String toString() {
+        return "NFSSettingsNode{" +
+                "password='" + "********" + '\'' +
+                ", username='" + username + '\'' +
+                ", rootPath='" + rootPath + '\'' +
+                ", serverurl='" + serverurl + '\'' +
+                '}';
+    }
 }

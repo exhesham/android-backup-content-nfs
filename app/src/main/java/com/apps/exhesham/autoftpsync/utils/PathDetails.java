@@ -103,7 +103,7 @@ public class PathDetails {
 
         if(!isDirectory()){
             String extension = FilenameUtils.getExtension(getFullpath());
-            String folderName = new RulesAPI().getExtensionFolder(extension);
+            String folderName = new RulesAPI(null).getExtensionFolder(extension);
             if(folderName != null){
                 return folderName;
             }else{

@@ -96,16 +96,14 @@ public class NfsAPI {
                 }
 
                 // Create the byte array to hold the data
-                byte[] bytes = new byte[(int)length];
+                byte[] bytes = new byte[60000];
 
                 // Read in the bytes
                 int offset = 0;
                 int numRead = 0;
 
-                while (offset < bytes.length
-                        && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
+                while ((numRead=is.read(bytes)) != -1) {
                     sfos.write(bytes);
-
                     offset += numRead;
                 }
             } finally {

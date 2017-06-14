@@ -1,15 +1,9 @@
 package com.apps.exhesham.autoftpsync;
 
 import android.Manifest;
-import android.app.IntentService;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
-import android.app.TaskStackBuilder;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -22,9 +16,7 @@ import android.os.StrictMode;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -32,7 +24,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.menu.ActionMenuItemView;
 import android.support.v7.widget.Toolbar;
 import android.util.ArrayMap;
-import android.util.ArraySet;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,28 +32,22 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.apps.exhesham.autoftpsync.utils.Constants;
-import com.apps.exhesham.autoftpsync.utils.PathDetails;
 import com.apps.exhesham.autoftpsync.utils.NFSSettingsNode;
-import com.apps.exhesham.autoftpsync.utils.NfsAPI;
+import com.apps.exhesham.autoftpsync.utils.PathDetails;
 import com.apps.exhesham.autoftpsync.utils.Utils;
 
-import org.apache.commons.io.FilenameUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
 
     static int totalFilesShouldBeSent =0;
-    static int totalFilesAlreadySent =0;
     static int totalHandled =0;
     private Context context;
 
@@ -93,189 +78,19 @@ public class MainActivity extends AppCompatActivity
 //        loadCategoriesContent();
     }
 
+
     private void scanDirectoriesOnDemand(){
-        ArraySet<PathDetails> filesToSend = new ArraySet<>();
+
         nfs_settings = Utils.getInstance(context).getSMBSettings();
         if(nfs_settings == null){
             showSnackBar("Network Settings Incorrect", "Fix", new MyHelpListener(), false);
             return;
         }
 
-        //
-        //-loadCategoriesContent();
-        if (totalFilesShouldBeSent !=0 && totalHandled < totalFilesShouldBeSent){
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Utils.getInstance(context).showAlert(
-                            "Sync process already running. please wait until it finishes",
-                            "Second request",
-                            false);
-                }
-            });
-            return;
-        }
-
-        JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);
-
-        totalFilesShouldBeSent = 0;
-        totalFilesAlreadySent = 0;
-        totalHandled = 0;
-        for(int i=0;i<ja.length();i++){
-            try {
-                JSONObject jo = ja.getJSONObject(i);
-                String status = jo.getString("status");
-                if(Constants.FOLLOWING_DIR.equals(status)){
-                    ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(jo.getString("path"));
-
-                    for (final PathDetails pd: pda) {
-                        if(     pd.isDirectory() ||
-                                Utils.getInstance(context).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENT)||
-                                (
-                                        Utils.getInstance(context).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENDING) ||
-                                                Utils.getInstance(context).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_CONNECTING)
-                                ) && ! isTimeout(jo.getLong("date"))){
-                            continue;
-                        }else{
-                            filesToSend.add(pd);
-                        }
-                    }
-
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        sendFiles(filesToSend);
-        if(totalFilesShouldBeSent == 0){
-            shouldStartRotatingIcon(false);
-        }
-
+        // TODO: Block double sending
+        Intent mServiceIntent = new Intent(this, UploadFilesService.class);
+        startService(mServiceIntent);
     }
-    private int sendFiles(ArraySet<PathDetails> pdArr) {
-        final ArrayList<CharSequence> fullSrcPaths = new ArrayList<>();
-        final ArrayList<CharSequence> fullDstPaths = new ArrayList<>();
-        boolean useSmbAsDefault = ! "false".equals(Utils.getInstance(context).getConfigString("use-ftp-as-default"));
-        nfs_settings = nfs_settings == null?Utils.getInstance(context).getSMBSettings():nfs_settings;
-        if(nfs_settings == null){
-            return -1;
-        }
-
-        for(PathDetails pd : pdArr){
-
-            String calculatedPath = pd.genPathRelativeToDepth();
-            if(calculatedPath == null){
-                Log.v("SendFile","The file is ignored:"+pd.getFullpath());
-                continue;
-            }
-            fullSrcPaths.add(pd.getFullpath());
-            fullDstPaths.add(nfs_settings.getRootPath() + "/" + calculatedPath);
-            totalFilesShouldBeSent++;
-        }
-        try{
-            new Thread() {
-                @Override
-                public void run() {
-                    sendWithSmbProtocol(fullSrcPaths, fullDstPaths);
-                }
-            }.start();
-
-
-        }catch (Exception e){
-            e.printStackTrace();
-            return -2;
-        }
-        return 0;
-    }
-    private void updateStatus(String filepath,String status) {
-
-        Intent localIntent = new Intent(Constants.BROADCAST_ACTION).putExtra(filepath, status);
-        // Broadcasts the Intent to receivers in this app.
-        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-    }
-    private void sendWithSmbProtocol(ArrayList<CharSequence> fileSrcPaths, ArrayList<CharSequence> fileDstPaths) {
-        try
-        {
-
-            if (Utils.getInstance(context).validateSmbCredintials(nfs_settings))
-            {
-                for(int i = 0; i<fileSrcPaths.size();i++) {
-                    totalHandled++;
-                    boolean isResultSuccess = false;
-                    String dstfolder = fileDstPaths.get(i).toString();
-                    String filepath = fileSrcPaths.get(i).toString();
-                    Log.v("onHandleIntent", "Will cd to path " + dstfolder);
-
-                    String dstfilePath = dstfolder+"/"+ FilenameUtils.getName(filepath);
-                    try {
-
-                        new NfsAPI(nfs_settings).nfsCreateDirectoryTree(dstfolder);
-                        Log.v("onHandleIntent", "navigating to dir passed successfully!");
-
-
-                        isResultSuccess = new NfsAPI(nfs_settings).uploadFile(filepath, dstfilePath, false);
-                    }catch (Exception ex){
-                        updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
-                        continue;
-                    }
-                    if (isResultSuccess) {
-                        updateStatus(filepath, Constants.STATUS_SENT);
-                        totalFilesAlreadySent++;
-                        Thread.sleep(10);
-//                        uploadFailing = false;
-                    } else {
-                        updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
-//                        uploadFailing = true;
-                    }
-
-                }
-            }else{
-                for(int i = 0; i<fileSrcPaths.size();i++) {
-                    String filepath = fileSrcPaths.get(i).toString();
-                    updateStatus(filepath, Constants.STATUS_FAILED_LOGIN);
-                    totalHandled++;
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            for(int i = 0; i<fileSrcPaths.size();i++) {
-                String filepath = fileSrcPaths.get(i).toString();
-                updateStatus(filepath,Constants.STATUS_FAILED_CONNECTING);
-                totalHandled++;
-            }
-
-            e.printStackTrace();
-//                uploadFailing = true;
-        }
-    }
-
-
-//    public class SmbSenderServiceAPI extends IntentService {
-//        public SmbSenderServiceAPI() {
-//            super("ReminderService");
-//        }
-//
-//        private void updateStatus(String filepath,String status){
-//
-//            Intent localIntent = new Intent(Constants.BROADCAST_ACTION).putExtra(filepath, status);
-//            // Broadcasts the Intent to receivers in this app.
-//            LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-//        }
-//
-//
-//        @Override
-//        protected void onHandleIntent(Intent workIntent)  {
-//            final  ArrayList<CharSequence> fileSrcPaths = workIntent.getCharSequenceArrayListExtra("full-src-paths");
-//            final  ArrayList<CharSequence> fileDstPaths = workIntent.getCharSequenceArrayListExtra("full-dst-paths");
-//            sendWithSmbProtocol(fileSrcPaths,fileDstPaths);
-//
-//        } // onHandleIntent
-//
-//
-//
-//    }
 
     private void loadCategoriesContent() {
 //        new Thread() {
@@ -297,7 +112,6 @@ public class MainActivity extends AppCompatActivity
                             continue;
                         }
                         String pathname = jo.getString("path");
-                        Long lastUpdate = jo.getLong("date");
                         ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(pathname);
                         if(pda == null){
                             continue;
@@ -311,9 +125,9 @@ public class MainActivity extends AppCompatActivity
                                 total.put(categoryName, total.get(categoryName) + 1);
                                 int total_sent_ctr = total_sent.get(categoryName);
                                 boolean shouldInc = Utils.getInstance(context).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENT);
-                                if(!shouldInc)
-                                    Log.v("loadCategoriesContent", "shouldInc for file "  +pd.getFullpath()+ " is " +(shouldInc?"True":"False"));
-
+//                                if(!shouldInc) {
+//                                    Log.v("loadCategoriesContent", "shouldInc for file "  +pd.getFullpath()+ " is " +(shouldInc?"True":"False"));
+//                                }
                                 total_sent.put(categoryName, shouldInc ? total_sent_ctr + 1 : total_sent_ctr);
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -397,53 +211,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    public class ResponseReceiver extends BroadcastReceiver
-    {
-        // Prevents instantiation
-        private ResponseReceiver() {}
-        // Called when the BroadcastReceiver gets an Intent it's registered to receive
-        @Override
-        public void onReceive(Context context, Intent intent) {
-        /*
-         * Handle Intents here.
-         */
-            //TODO: Add Progress Bar
-            Log.v ("Receive","On receive");
-            /*
-             * Gets the status from the Intent's extended data, and chooses the appropriate action
-             */
-            Bundle b = intent.getExtras();
-            Set<String> allfiles = b.keySet();
-            Iterator<String> iter = allfiles.iterator();
-            if (totalFilesAlreadySent < totalFilesShouldBeSent && totalHandled < totalFilesShouldBeSent) {
-                startNotification("Uploaded " + Integer.toString(totalFilesAlreadySent) + " Out of " + Integer.toString(totalFilesShouldBeSent));
-            }
-            if(totalFilesShouldBeSent != 0 && totalHandled == totalFilesShouldBeSent && totalFilesAlreadySent != 0){
-                startNotification("Finished uploading "+Integer.toString(totalFilesAlreadySent) + " Files");
-                shouldStartRotatingIcon(false);
-            }
-            if(totalFilesShouldBeSent != 0 && totalHandled == totalFilesShouldBeSent && totalFilesAlreadySent == 0){
-                startNotification("Failed to upload all "+Integer.toString(totalFilesShouldBeSent) +  " Files! Check Network Configuration or connectivity");
-                shouldStartRotatingIcon(false);
-            }
-            while (iter.hasNext()) {
-                String filename = iter.next();
-                String status = b.getString(filename);
-                String previous_status = Utils.getInstance(context).getPathStatus(filename);
-                Utils.getInstance(context).storeConfigString(filename, Utils.getInstance(context).generateJsonStatus(status,filename,false).toString());
-                if(Constants.STATUS_SENT.equals(status)){
-                    //Update Counters
-                    String categoryName = Utils.FileSysAPI.getFileCategory(filename);
-                    /*i added !status.equals(previous_status) in order to ban updating the counter twice on a resent file*/
-                    if(null != categoryName && !status.equals(previous_status)) {
-                        int total_sent_ctr = total_sent.get(categoryName);
-                        total_sent.put(categoryName, Utils.getInstance(context).getPathStatus(filename).equals(Constants.STATUS_SENT) ? total_sent_ctr + 1 : total_sent_ctr);
-                    }
-                }
-            }
-            updateCounters();
-        }
-    }
+
     private void shouldStartRotatingIcon(final boolean start){
         final int color = !start ? Color.parseColor("#FFF1F9"): Color.parseColor("#00E506");
 
@@ -510,6 +278,7 @@ public class MainActivity extends AppCompatActivity
                 }.start();
             }
         });
+
     }
 
 
@@ -585,11 +354,6 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private boolean isTimeout(Long epochtime) {
-        long diff = Math.abs(epochtime - new Date().getTime());
-        long diffDays = diff / Constants.DEFAULT_SENDING_TIMEOUT_MS;
-        return diffDays  >= 1;
-    }
     private void updateCounters() {
 
         TextView video_total_files = (TextView) findViewById(R.id.video_total_files);
@@ -741,14 +505,8 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        // The filter's action is BROADCAST_ACTION
-        IntentFilter statusIntentFilter = new IntentFilter(Constants.BROADCAST_ACTION);
         // Instantiates a new DownloadStateReceiver
-        ResponseReceiver mDownloadStateReceiver = new ResponseReceiver();
-        // Registers the DownloadStateReceiver and its intent filters
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                mDownloadStateReceiver,
-                statusIntentFilter);
+
         requestPermissions();
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
@@ -825,36 +583,6 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-    private void startNotification(String notificationContent) {
-        NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.drawable.notification_icon)
-                        .setContentTitle("Phone to FTP")
-                        .setContentText(notificationContent);
-        // Creates an explicit intent for an Activity in your app
-        Intent resultIntent = new Intent(this, MainActivity.class);
-
-        // The stack builder object will contain an artificial back stack for the
-        // started Activity.
-        // This ensures that navigating backward from the Activity leads out of
-        // your application to the Home screen.
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        // Adds the back stack for the Intent (but not the Intent itself)
-        stackBuilder.addParentStack(MainActivity.class);
-        // Adds the Intent that starts the Activity to the top of the stack
-        stackBuilder.addNextIntent(resultIntent);
-        PendingIntent resultPendingIntent =
-                stackBuilder.getPendingIntent(
-                        0,
-                        PendingIntent.FLAG_UPDATE_CURRENT
-                );
-        mBuilder.setContentIntent(resultPendingIntent);
-        NotificationManager mNotificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        // mId allows you to update the notification later on.
-        int mId = 10;
-        mNotificationManager.notify(mId, mBuilder.build());
     }
 
     private void requestPermissions() {

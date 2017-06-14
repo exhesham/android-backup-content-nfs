@@ -38,7 +38,7 @@ public class RulesActivity extends AppCompatActivity {
     public ArrayMap<String,String> getFollowedRules() {
         if(_followed_rules == null){
             Log.v("read rules", " Reading rules");
-            _followed_rules = new RulesAPI().readRules();
+            _followed_rules = new RulesAPI(this).readRules();
         }
         return _followed_rules;
     }

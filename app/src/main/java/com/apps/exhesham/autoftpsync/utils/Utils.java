@@ -189,10 +189,10 @@ public class Utils {
     }
 
     public NFSSettingsNode getSMBSettings() {
-        String nfsserver = Utils.getInstance(null).getConfigString(Constants.DB_SMB_SERVER);
-        String defaultpath = Utils.getInstance(null).getConfigString(Constants.DB_SMB_DEFAULT_PATH);
-        String nfsusername = Utils.getInstance(null).getConfigString(Constants.DB_SMB_USERNAME);
-        String nfspassword = Utils.getInstance(null).getConfigString(Constants.DB_SMB_PASSWORD);
+        String nfsserver = Utils.getInstance(myContext).getConfigString(Constants.DB_SMB_SERVER);
+        String defaultpath = Utils.getInstance(myContext).getConfigString(Constants.DB_SMB_DEFAULT_PATH);
+        String nfsusername = Utils.getInstance(myContext).getConfigString(Constants.DB_SMB_USERNAME);
+        String nfspassword = Utils.getInstance(myContext).getConfigString(Constants.DB_SMB_PASSWORD);
         if (nfsserver.equals("") || defaultpath.equals("")){
             return null;
         }else{
@@ -236,10 +236,14 @@ public class Utils {
     public JSONObject  getJsonObjFromDB(String key) {
         String  joStr = getConfigString(key);
         JSONObject ja;
+        if (key == null || key == "" || joStr == null || joStr == ""){
+            return null;
+        }
         try {
             ja = new JSONObject(joStr);
         } catch (JSONException e) {
-            e.printStackTrace();
+
+            Log.e("getJsonObjFromDB", " cannot parse the value for the key " + key + "the found value is:" + joStr + " err:" + e.getMessage());
             return null;
         }
         return  ja;
@@ -313,10 +317,10 @@ public class Utils {
             }
             System.out.println("Done!");
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             // do something
             e.printStackTrace();
-            System.out.println(e.getMessage());
+            System.out.println("Failed to validate for username " + username + " error: " + e.getMessage());
             return false;
         }
         return true;

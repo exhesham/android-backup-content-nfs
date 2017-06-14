@@ -1,5 +1,6 @@
 package com.apps.exhesham.autoftpsync.utils;
 
+import android.content.Context;
 import android.support.v4.util.ArrayMap;
 
 import org.apache.commons.io.FilenameUtils;
@@ -12,11 +13,17 @@ import org.json.JSONObject;
  */
 
 public class RulesAPI {
+    private Context myContext;
+    public RulesAPI(){
 
+    }
+    public RulesAPI(Context myContext){
+        this.myContext = myContext;
+    }
     public ArrayMap<String,String> readRules(){
         boolean shouldUpdateDB = false;
-        JSONArray ja = Utils.getInstance(null).getJsonArrayFromDB("rules");
-        JSONObject version =  Utils.getInstance(null).getJsonObjFromDB(Constants.DB_FOLLOWED_DIRS);
+        JSONArray ja = Utils.getInstance(myContext).getJsonArrayFromDB("rules");
+        JSONObject version =  Utils.getInstance(myContext).getJsonObjFromDB(Constants.VERSION);
         if(version == null || ja.length() == 0){
             /*If the version is not identified then for sure it is not version 3, then reformat the available data*/
             ja = new JSONArray();
@@ -65,12 +72,12 @@ public class RulesAPI {
             }
         }
         if(shouldUpdateDB){
-            Utils.getInstance(null).storeConfigString("rules",ja.toString());
+            Utils.getInstance(myContext).storeConfigString("rules",ja.toString());
         }
         return  rules;
     }
     public String getExtensionFolder(String extension) {
-        ArrayMap<String, String> rules = new RulesAPI().readRules();
+        ArrayMap<String, String> rules = new RulesAPI(myContext).readRules();
         if(rules.containsKey(extension.toLowerCase())){
             return rules.get(extension);
         }

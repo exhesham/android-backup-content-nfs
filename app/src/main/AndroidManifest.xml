@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
 
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/app_icon"
@@ -80,7 +81,8 @@
             </intent-filter>
         </activity>
 
-
+        <service android:name="com.apps.exhesham.autoftpsync.UploadFilesService"
+            android:process=":remote" />
 
     </application>
 
