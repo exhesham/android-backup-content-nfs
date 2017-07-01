@@ -4,10 +4,8 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.util.ArraySet;
 import android.util.Log;
@@ -97,6 +95,13 @@ public class UploadFilesService  extends Service {
         long diffDays = diff / Constants.DEFAULT_SENDING_TIMEOUT_MS;
         return diffDays  >= 1;
     }
+
+    /***
+     * This is the function that receive the files need to be uploaded and upload them
+     * the function is part of the service
+     * @return
+     */
+
     private int sendFiles() {
         lock_sending_requests = true;
         ArraySet<PathDetails> filesToSend = new ArraySet<>();
@@ -144,7 +149,7 @@ public class UploadFilesService  extends Service {
                 continue;
             }
             fullSrcPaths.add(pd.getFullpath());
-            fullDstPaths.add(nfs_settings.getRootPath() + "/" + calculatedPath);
+            fullDstPaths.add(nfs_settings.getSelectedRootPath() + "/" + calculatedPath);
             totalFilesShouldBeSent++;
         }
         if(fullSrcPaths.size() == 0){
@@ -211,7 +216,7 @@ public class UploadFilesService  extends Service {
     }
 
     private void updateStatus(String filename, String status) {
-        Log.d("updateStatus", " Received for file " + filename);
+        Log.d("updateStatus", " will update the status for file " + filename);
         Log.d("updateStatus", " totalFilesAlreadySent= " + totalFilesAlreadySent+
                 " totalFilesShouldBeSent= " + totalFilesShouldBeSent+" totalHandled= " + totalHandled);
         if (totalFilesAlreadySent < totalFilesShouldBeSent && totalHandled < totalFilesShouldBeSent) {
@@ -229,6 +234,7 @@ public class UploadFilesService  extends Service {
         }
         try {
             Utils.getInstance(this).storeConfigString(filename, Utils.getInstance(this).generateJsonStatus(status, filename, false).toString());
+            Log.d("updateStatus", "Stored the status " + status + " for the file " + filename);
         }catch (Exception e){
             Log.e("updateStatus", " Failed to update status because:" + e.getMessage());
         }
@@ -253,7 +259,7 @@ public class UploadFilesService  extends Service {
 
             for (int i = 0; i < fileSrcPaths.size(); i++) {
                 totalHandled++;
-                boolean isResultSuccess = false;
+                boolean isResultSuccess;
                 String dstfolder = fileDstPaths.get(i).toString();
                 String filepath = fileSrcPaths.get(i).toString();
                 Log.v("onHandleIntent", "Will cd to path " + dstfolder);

@@ -43,12 +43,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-
-    static int totalFilesShouldBeSent =0;
-    static int totalHandled =0;
     private Context context;
 
     static NFSSettingsNode nfs_settings;
@@ -88,7 +84,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         // TODO: Block double sending
-        Intent mServiceIntent = new Intent(this, UploadFilesService.class);
+        Intent mServiceIntent = new Intent(context, UploadFilesService.class);
         startService(mServiceIntent);
     }
 

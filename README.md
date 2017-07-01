@@ -35,6 +35,13 @@ if the path is a default path, then it cannot be deleted by the user.
                      }
 
     ...
+    "smb_default_path": [{
+        "path": "/bla",
+        "is_selected": true
+    }]
+    "smb_server":"192.168.1.1"
+    "smb_username":"admin"
+    "smb_password":"admin"
 }
 ```
 

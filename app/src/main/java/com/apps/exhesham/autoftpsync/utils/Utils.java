@@ -10,15 +10,12 @@ import android.text.format.Formatter;
 import android.util.Log;
 import android.widget.EditText;
 
-import com.apps.exhesham.autoftpsync.RulesActivity;
-
 import org.apache.commons.io.FilenameUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -47,15 +44,14 @@ public class Utils {
         return instance;
     }
     public void storeConfigString(String key,String val){
-        SharedPreferences sharedPref = myContext.getSharedPreferences(
-                preference_file_key, Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = myContext.getSharedPreferences(preference_file_key, Context.MODE_MULTI_PROCESS);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(key, val);
         editor.commit();
     }
     public String getConfigString(String key){
         SharedPreferences sharedPref = myContext.getSharedPreferences(
-                preference_file_key, Context.MODE_PRIVATE);
+                preference_file_key, Context.MODE_MULTI_PROCESS);
 
         return  sharedPref.getString(key, "");
     }
@@ -190,13 +186,13 @@ public class Utils {
 
     public NFSSettingsNode getSMBSettings() {
         String nfsserver = Utils.getInstance(myContext).getConfigString(Constants.DB_SMB_SERVER);
-        String defaultpath = Utils.getInstance(myContext).getConfigString(Constants.DB_SMB_DEFAULT_PATH);
+        JSONArray defaultpaths = Utils.getInstance(myContext).getJsonArrayFromDB(Constants.DB_SMB_DEFAULT_PATH);
         String nfsusername = Utils.getInstance(myContext).getConfigString(Constants.DB_SMB_USERNAME);
         String nfspassword = Utils.getInstance(myContext).getConfigString(Constants.DB_SMB_PASSWORD);
-        if (nfsserver.equals("") || defaultpath.equals("")){
+        if (nfsserver.equals("") || defaultpaths.length() == 0){
             return null;
         }else{
-            return  new NFSSettingsNode(nfsusername,nfspassword,nfsserver,defaultpath);
+            return  new NFSSettingsNode(nfsusername,nfspassword,nfsserver,defaultpaths);
         }
     }
 
@@ -298,7 +294,7 @@ public class Utils {
         String username = smb_settings.getUsername();
         String password = smb_settings.getPassword();
         String defaultAddress = smb_settings.getServerurl();
-        String dirname = smb_settings.getRootPath();
+        String dirname = smb_settings.getSelectedRootPath();
         try{
             String path = "smb://"+defaultAddress+"/" + dirname;
             String user = username +":" + password;

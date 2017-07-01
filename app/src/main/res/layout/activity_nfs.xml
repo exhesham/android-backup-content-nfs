@@ -21,15 +21,6 @@
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/AppTheme.NoActionBar.PopupOverlay" />
 
-        <TextView
-            android:text="After you fill the username, password and server correctly, you can load the path."
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/textView4"
-            android:layout_weight="1"
-            tools:text="After you fill the username, password and server correctly, you can load the path."
-            android:contentDescription="After you fill the username, password and server correctly, you can load the path." />
-
     </android.support.design.widget.AppBarLayout>
 
     <LinearLayout
@@ -54,6 +45,16 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
+
+                    <TextView
+                        android:text="After you fill the username, password and server correctly, you can load the path."
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/textView4"
+                        tools:text="After you fill the username, password and server correctly, you can load the path."
+                        android:contentDescription="After you fill the username, password and server correctly, you can load the path."
+                        android:filterTouchesWhenObscured="false"
+                        android:paddingBottom="@dimen/fab_margin" />
 
                     <android.support.design.widget.TextInputLayout
                         android:layout_width="match_parent"
@@ -115,14 +116,13 @@
                             android:layout_height="match_parent"
                             android:layout_weight="1">
 
-                            <AutoCompleteTextView
+                            <Spinner
                                 android:id="@+id/text_defaultpath"
                                 android:layout_width="285dp"
                                 android:layout_height="wrap_content"
                                 android:hint="Default backup path"
                                 android:inputType="textUri"
-                                android:maxLines="1"
-                                android:singleLine="true" />
+                                android:maxLines="1"/>
 
                             <ImageButton
                                 android:layout_width="wrap_content"

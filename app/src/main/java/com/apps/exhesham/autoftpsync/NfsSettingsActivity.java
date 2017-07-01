@@ -6,15 +6,22 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.apps.exhesham.autoftpsync.utils.Constants;
 import com.apps.exhesham.autoftpsync.utils.NFSSettingsNode;
 import com.apps.exhesham.autoftpsync.utils.NfsAPI;
 import com.apps.exhesham.autoftpsync.utils.Utils;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,10 +52,9 @@ public class NfsSettingsActivity extends AppCompatActivity {
         TextView usernameTV = (TextView) findViewById(R.id.text_username);
         TextView passwordTV = (TextView) findViewById(R.id.text_password);
         TextView serverurlTV = (TextView) findViewById(R.id.text_server);
-        TextView defaultpathTV = (TextView) findViewById(R.id.text_defaultpath);
 
         String defaultAddress = Utils.getInstance(context).getConfigString(Constants.DB_SMB_SERVER);
-        String defaultPath = Utils.getInstance(context).getConfigString(Constants.DB_SMB_DEFAULT_PATH);
+        JSONArray defaultPaths = Utils.getInstance(context).getJsonArrayFromDB(Constants.DB_SMB_DEFAULT_PATH);
         String username = Utils.getInstance(context).getConfigString(Constants.DB_SMB_USERNAME);
         String password = Utils.getInstance(context).getConfigString(Constants.DB_SMB_PASSWORD);
         if(defaultAddress.equals("")){
@@ -56,24 +62,39 @@ public class NfsSettingsActivity extends AppCompatActivity {
         }
 
         if(username.equals("") && password.equals("")) {
-            if (Utils.getInstance(context).validateSmbCredintials(new NFSSettingsNode("admin", "admin", defaultAddress, ""))) {
+            if (Utils.getInstance(context).validateSmbCredintials(new NFSSettingsNode("admin", "admin", defaultAddress, new JSONArray()))) {
                 username = "admin";
                 password = "admin";
             }
-            if (Utils.getInstance(context).validateSmbCredintials(new NFSSettingsNode("root", "root", defaultAddress, ""))) {
+            if (Utils.getInstance(context).validateSmbCredintials(new NFSSettingsNode("root", "root", defaultAddress, new JSONArray()))) {
                 username = "root";
                 password = "root";
             }
-            if (Utils.getInstance(context).validateSmbCredintials(new NFSSettingsNode("", "", defaultAddress, ""))) {
+            if (Utils.getInstance(context).validateSmbCredintials(new NFSSettingsNode("", "", defaultAddress, new JSONArray()))) {
                 username = "";
                 password = "";
             }
         }
-        if ("".equals(defaultPath)) {
+        if (defaultPaths.length() == 0) {
             // UI thread is needed in order to load the categories
             refreshPath(null);
         }else {
-            defaultpathTV.setText(defaultPath);
+            Log.d("fillSettings", "Convert the smb settings json to spinner");
+            ArrayList<String> routerPathsArray = new ArrayList<>();
+            int selectedItem =0;
+            for(int i = 0;i < defaultPaths.length();i++){
+                try {
+                    JSONObject possibleSelection = defaultPaths.getJSONObject(i);
+                    routerPathsArray.add(possibleSelection.getString("path"));
+                    if(possibleSelection.getBoolean("is_selected")){
+                        selectedItem = i;
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+            fillSpinner(routerPathsArray, selectedItem);
         }
         usernameTV.setText(username);
         passwordTV.setText(password);
@@ -86,13 +107,26 @@ public class NfsSettingsActivity extends AppCompatActivity {
         TextView usernameTV = (TextView) findViewById(R.id.text_username);
         TextView passwordTV = (TextView) findViewById(R.id.text_password);
         TextView serverurlTV = (TextView) findViewById(R.id.text_server);
-        TextView defaultpathTV = (TextView) findViewById(R.id.text_defaultpath);
+        Spinner defaultpathTV = (Spinner) findViewById(R.id.text_defaultpath);
+        JSONArray allPaths = new JSONArray();
+        for(int i=0; i< defaultpathTV.getAdapter().getCount(); i++){
+            JSONObject possiblePathJson = new JSONObject();
+            String possiblePath =   defaultpathTV.getAdapter().getItem(i).toString();
+            try {
+                possiblePathJson.put("path", possiblePath);
+                possiblePathJson.put("is_selected", defaultpathTV.getSelectedItem().toString().equals(possiblePath));
+                allPaths.put(possiblePathJson);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
 
         Utils.getInstance(context).storeConfigString(Constants.DB_SMB_SERVER, serverurlTV.getText().toString());
-        Utils.getInstance(context).storeConfigString(Constants.DB_SMB_DEFAULT_PATH, defaultpathTV.getText().toString());
+        Utils.getInstance(context).storeConfigString(Constants.DB_SMB_DEFAULT_PATH, allPaths.toString());
         Utils.getInstance(context).storeConfigString(Constants.DB_SMB_USERNAME,usernameTV.getText().toString());
         Utils.getInstance(context).storeConfigString(Constants.DB_SMB_PASSWORD, passwordTV.getText().toString());
-        finishActivity(0);
+        this.finish();
     }
     private void showSnackBar(String msg, String undo, View.OnClickListener listener){
         //TODO: Move to utils
@@ -107,12 +141,12 @@ public class NfsSettingsActivity extends AppCompatActivity {
         TextView usernameTV = (TextView) findViewById(R.id.text_username);
         TextView passwordTV = (TextView) findViewById(R.id.text_password);
         TextView serverurlTV = (TextView) findViewById(R.id.text_server);
-        TextView defaultpathTV = (TextView) findViewById(R.id.text_defaultpath);
+        Spinner defaultpathTV = (Spinner) findViewById(R.id.text_defaultpath);
         //TODO: Should start on thread and do a blocking progress wheel
         if (! Utils.getInstance(context).validateSmbCredintials(new NFSSettingsNode(usernameTV.getText().toString(),
                 passwordTV.getText().toString(),
                 serverurlTV.getText().toString(),
-                defaultpathTV.getText().toString()
+                spinnerToJsonArray()
                 ))) {
             showSnackBar("Your Credintials are INCORRECT!", "help", new MyHelpListener());
 
@@ -120,6 +154,25 @@ public class NfsSettingsActivity extends AppCompatActivity {
         }
         showSnackBar("Your Credintials are CORRECT!", "help", new MyHelpListener());
     }
+
+    private JSONArray spinnerToJsonArray() {
+        Spinner defaultpathTV = (Spinner) findViewById(R.id.text_defaultpath);
+        JSONArray allPaths = new JSONArray();
+        for(int i=0; i< defaultpathTV.getAdapter().getCount(); i++){
+            JSONObject possiblePathJson = new JSONObject();
+            String possiblePath =   defaultpathTV.getAdapter().getItem(i).toString();
+            try {
+                possiblePathJson.put("path", possiblePath);
+                possiblePathJson.put("is_selected", defaultpathTV.getSelectedItem().toString().equals(possiblePath));
+                allPaths.put(possiblePathJson);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+        return allPaths;
+    }
+
     public static String humanReadableByteCount(long bytes, boolean si) {
         int unit = si ? 1000 : 1024;
         if (bytes < unit) return bytes + " B";
@@ -142,14 +195,13 @@ public class NfsSettingsActivity extends AppCompatActivity {
                 @Override
                 public void run() {
 
-                    ArrayList<String> possibleRootDir = new NfsAPI(new NFSSettingsNode(nfsUsername, nfsPassword, nfsDefaultAddress, "")).nfsGetRootDir();
+                    final ArrayList<String> possibleRootDir = new NfsAPI(new NFSSettingsNode(nfsUsername, nfsPassword, nfsDefaultAddress, new JSONArray())).nfsGetRootDir();
                     if (possibleRootDir.size() > 0) {
                         final String availablePath = possibleRootDir.get(0);
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                TextView defaultpathTV = (TextView) findViewById(R.id.text_defaultpath);
-                                defaultpathTV.setText(availablePath);
+                                fillSpinner(possibleRootDir, 0);
                             }
                         });
 
@@ -161,6 +213,14 @@ public class NfsSettingsActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void fillSpinner(ArrayList<String> possibleRootDir, int selected) {
+        Spinner defaultpathTV = (Spinner) findViewById(R.id.text_defaultpath);
+        ArrayAdapter<String> adp = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, possibleRootDir);
+        adp.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        defaultpathTV.setAdapter(adp);
+        defaultpathTV.setSelection(selected);
     }
 
     @Override

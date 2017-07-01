@@ -1,5 +1,7 @@
 package com.apps.exhesham.autoftpsync.utils;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -7,18 +9,28 @@ import org.json.JSONObject;
  */
 
 public class NFSSettingsNode {
-    public NFSSettingsNode(String username, String password, String serverurl, String rootdir) {
+    public NFSSettingsNode(String username, String password, String serverurl, JSONArray rootdir) {
+
         setPassword(password);
         setRootPath(rootdir);
         setServerurl(serverurl);
         setUsername(username);
     }
 
-    public String getRootPath() {
-        return rootPath;
+    public String getSelectedRootPath() {
+        for(int i=0;i<rootPath.length();i++){
+            try {
+                if(rootPath.getJSONObject(i).getBoolean("is_selected")){
+                    return rootPath.getJSONObject(i).getString("path");
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 
-    public void setRootPath(String rootPath) {
+    public void setRootPath(JSONArray rootPath) {
         this.rootPath = rootPath;
     }
 
@@ -48,7 +60,7 @@ public class NFSSettingsNode {
 
     private String username;
     private String password;
-    private String rootPath;
+    private JSONArray rootPath;
     private String serverurl;
 
     @Override
