@@ -240,7 +240,7 @@ public class UploadFilesService  extends Service {
         }
         if(Constants.STATUS_SENT.equals(status)){
             //Update Counters
-            String categoryName = Utils.FileSysAPI.getFileCategory(filename);
+            //String categoryName = Utils.FileSysAPI.getFileCategory(filename);
                     /*i added !status.equals(previous_status) in order to ban updating the counter twice on a resent file*/
             //TODO: Enable or replace functionality
 //            String previous_status = Utils.getInstance(null).getPathStatus(filename);
@@ -273,6 +273,8 @@ public class UploadFilesService  extends Service {
 
                     isResultSuccess = new NfsAPI(nfs_settings).uploadFile(filepath, dstfilePath, false);
                 } catch (Exception ex) {
+                    Log.e("sendWithSmbProtocol", "Uploading threw an exception:" + ex.getMessage());
+                    ex.printStackTrace();
                     updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
                     continue;
                 }
@@ -283,6 +285,7 @@ public class UploadFilesService  extends Service {
 //                        uploadFailing = false;
                 } else {
                     updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
+                    Log.e("sendWithSmbProtocol", "Uploading failed");
 //                        uploadFailing = true;
                 }
 

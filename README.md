@@ -1,9 +1,22 @@
 # Guide
 
-This Application categorize your files and let you choose what category to be synced into the FTP. The categories are determined according to extensions. Those extensions are predefined and you can customize them to support more file types.
+## Goal
 
-The App will create folders in the FTP. Those folders are configured in the Rules section of this app. The files will be uploaded each time you press the sync button on the main screen.
+The goal of this app is to convert your home to be the cloud the easiest way. This app sync your device
+files to the SMB storage in your LAN through LAN or through WAN. for security reasons, i recommend to
+use LAN.
 
+## Features
+
+To make life easy, this application has factory default categories. The application scans pre-defined
+directories and user-configured directories and sync them to the SMB server. the files are sorted according
+to extension. you can customize your extensions and the directories to be scanned.
+
+If your network contains more than one storage, in the settings you can choose with which one to work.
+
+The application starts a service that handle the uploading in the background. In order to save battery
+and ban overheating. the thread send the files one after the other and not simultanuesly. Moreover, large
+files are not loaded into your RAM as whole but in chunks.
 
 ![Alt text](app/src/main/assets/sync_now.png)
 
@@ -18,6 +31,7 @@ The App will create folders in the FTP. Those folders are configured in the Rule
 The followed path status are both available as standalone and as array
 The "default" tells whether it is a fixed path or not.
 if the path is a default path, then it cannot be deleted by the user.
+
 ```
 {
     following_paths :   [
@@ -57,9 +71,11 @@ The Categories order:
 ```
 
 # The rules order
-Rules manages the extenstions and map to what folder each extenstion goes.
+
+Rules manages the extensions and map to what folder each extension goes.
 the default extension is "*" and its folder_name can be a valid folder name or the value "<IGNORE FILE>"
-if the value <IGNORE FILE> is mapped to * then the default extensions will ignored
+if the value <IGNORE FILE> is mapped to * then the default extensions will ignored.
+
 ```
 {
     rules: [
@@ -73,7 +89,7 @@ if the value <IGNORE FILE> is mapped to * then the default extensions will ignor
 ```
 
 
+## Notes
 
-## Notes:
 * When scanning files for sending, if a file in status sending, it will not be resent in case the sending
 was updated 10 minutes before. the constant of the timeout is DEFAULT_SENDING_TIMEOUT_MS
