@@ -22,7 +22,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 
 
@@ -33,6 +36,7 @@ import java.util.Date;
 public class UploadFilesService  extends Service {
 
     static int totalFilesShouldBeSent =0;
+    static int totalFilesFailed =0;
     static int totalFilesAlreadySent =0;
     static int totalHandled =0;
 
@@ -73,7 +77,7 @@ public class UploadFilesService  extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        showNotification("Uploading files...");
+        showNotification("Uploading files...", "Upload Status");
         if(lock_sending_requests == true){
             Log.w("onStartCommand", "Will not start another request because lock_sending_requests is true" );
 
@@ -108,6 +112,7 @@ public class UploadFilesService  extends Service {
         JSONArray ja = Utils.getInstance(this).getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);
         totalFilesShouldBeSent = 0;
         totalFilesAlreadySent = 0;
+        totalFilesFailed = 0;
         totalHandled = 0;
         for(int i=0;i<ja.length();i++){
             try {
@@ -139,7 +144,7 @@ public class UploadFilesService  extends Service {
         final ArrayList<CharSequence> fullDstPaths = new ArrayList<>();
 
         NFSSettingsNode nfs_settings = Utils.getInstance(this).getSMBSettings();
-        showNotification("Uploading " +filesToSend.size()  + " Files...");
+        showNotification("Initializing " +filesToSend.size()  + " Files...","Upload Status");
 
         for(PathDetails pd : filesToSend){
 
@@ -153,7 +158,7 @@ public class UploadFilesService  extends Service {
             totalFilesShouldBeSent++;
         }
         if(fullSrcPaths.size() == 0){
-            showNotification("All relevant files already synced!");
+            showNotification("All relevant files already synced!", "Upload Status");
             lock_sending_requests = false;
             return 0;
         }
@@ -191,7 +196,7 @@ public class UploadFilesService  extends Service {
     /**
      * Show a notification while this service is running.
      */
-    private void showNotification(String notificationMsg) {
+    private void showNotification(String notificationMsg, String notificationTitle) {
         // In this sample, we'll use the same text for the ticker and the expanded notification
         Log.d("showNotification", "Will show the notification " + notificationMsg);
         CharSequence text = notificationMsg;
@@ -206,7 +211,7 @@ public class UploadFilesService  extends Service {
                 .setSmallIcon(R.drawable.sync_now)  // the status icon
                 .setTicker(text)  // the status text
                 .setWhen(System.currentTimeMillis())  // the time stamp
-                .setContentTitle("Upload Status")  // the label of the entry
+                .setContentTitle(notificationTitle)  // the label of the entry
                 .setContentText(text)  // the contents of the entry
                 .setContentIntent(contentIntent)  // The intent to send when the entry is clicked
                 .build();
@@ -215,42 +220,39 @@ public class UploadFilesService  extends Service {
         mNM.notify(NOTIFICATION, notification);
     }
 
-    private void updateStatus(String filename, String status) {
-        Log.d("updateStatus", " will update the status for file " + filename);
-        Log.d("updateStatus", " totalFilesAlreadySent= " + totalFilesAlreadySent+
+    /***
+     * This function will handle and decide what to do with a file status
+     * @param filename
+     * @param status
+     */
+    private void updateFileStatus(String filename,String dstfolder, String status) {
+        Log.d("updateFileStatus", " will update the status for file " + filename);
+        Log.d("updateFileStatus", " totalFilesAlreadySent= " + totalFilesAlreadySent+
                 " totalFilesShouldBeSent= " + totalFilesShouldBeSent+" totalHandled= " + totalHandled);
-        if (totalFilesAlreadySent < totalFilesShouldBeSent && totalHandled < totalFilesShouldBeSent) {
-            showNotification("Uploaded " + Integer.toString(totalFilesAlreadySent) + " Out of " + Integer.toString(totalFilesShouldBeSent));
-        }
-        if(totalFilesShouldBeSent != 0 && totalHandled == totalFilesShouldBeSent && totalFilesAlreadySent != 0){
-            showNotification("Finished uploading "+Integer.toString(totalFilesShouldBeSent) + " Files");
-            //TODO: Enable or replace functionality
-            //shouldStartRotatingIcon(false);
-        }
-        if(totalFilesShouldBeSent != 0 && totalHandled == totalFilesShouldBeSent && totalFilesAlreadySent == 0){
-            showNotification("Failed to upload all "+Integer.toString(totalFilesShouldBeSent) +  " Files! Check Network Configuration or connectivity");
-            //TODO: Enable or replace functionality
-            //shouldStartRotatingIcon(false);
-        }
+        int percent = (int)(Math.ceil((totalHandled * 100.0f) / totalFilesShouldBeSent));
+        showNotification("Uploaded:" + Integer.toString(totalFilesAlreadySent) + " Failed:"  + Integer.toString(totalFilesFailed)+ " Total:"+ Integer.toString(totalFilesShouldBeSent) + " To:" + dstfolder,"Upload Status " + percent + "%");
+
+        // need to update the data in the metadata storage in order to update counters accordingly.
+        Log.d("updateFileStatus", "Storing the status " + status + " for the file " + filename);
+        Utils.getInstance(this).storeConfigString(filename, Utils.getInstance(this).generateJsonStatus(status, filename, false).toString());
+        // store the logs
+        JSONArray allLogs = Utils.getInstance(this).getJsonArrayFromDB("sync_logs");
         try {
-            Utils.getInstance(this).storeConfigString(filename, Utils.getInstance(this).generateJsonStatus(status, filename, false).toString());
-            Log.d("updateStatus", "Stored the status " + status + " for the file " + filename);
-        }catch (Exception e){
-            Log.e("updateStatus", " Failed to update status because:" + e.getMessage());
+            Date date = Calendar.getInstance().getTime();
+
+            // Display a date in day, month, year format
+            DateFormat formatter = new SimpleDateFormat("dd/MM/yy  hh:mm:ss a");
+            String today = formatter.format(date);
+            allLogs.put(new JSONObject().put("file_name",filename).
+                    put("file_status", status).put("dist_folder", dstfolder).put("sync_date", today)
+                    );
+            Utils.getInstance(this).storeConfigString("sync_logs", allLogs.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
-        if(Constants.STATUS_SENT.equals(status)){
-            //Update Counters
-            //String categoryName = Utils.FileSysAPI.getFileCategory(filename);
-                    /*i added !status.equals(previous_status) in order to ban updating the counter twice on a resent file*/
-            //TODO: Enable or replace functionality
-//            String previous_status = Utils.getInstance(null).getPathStatus(filename);
-//            if(null != categoryName && !status.equals(previous_status)) {
-//                int total_sent_ctr = total_sent.get(categoryName);
-//                total_sent.put(categoryName, Utils.getInstance(null).getPathStatus(filename).equals(Constants.STATUS_SENT) ? total_sent_ctr + 1 : total_sent_ctr);
-//            }
-        }
-        //TODO: Enable or replace functionality
-        //updateCounters();
+        Utils.getInstance(this).storeConfigString(filename, Utils.getInstance(this).generateJsonStatus(status, filename, false).toString());
+
+
     }
     private void sendWithSmbProtocol(ArrayList<CharSequence> fileSrcPaths, ArrayList<CharSequence> fileDstPaths) {
         try {
@@ -275,21 +277,24 @@ public class UploadFilesService  extends Service {
                 } catch (Exception ex) {
                     Log.e("sendWithSmbProtocol", "Uploading threw an exception:" + ex.getMessage());
                     ex.printStackTrace();
-                    updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
+                    totalFilesFailed++;
+                    updateFileStatus(filepath,dstfolder, Constants.STATUS_SENDING_FAILED);
                     continue;
                 }
                 if (isResultSuccess) {
-                    updateStatus(filepath, Constants.STATUS_SENT);
                     totalFilesAlreadySent++;
+                    updateFileStatus(filepath,dstfolder, Constants.STATUS_SENT);
                     Thread.sleep(10);
 //                        uploadFailing = false;
                 } else {
-                    updateStatus(filepath, Constants.STATUS_SENDING_FAILED);
+                    totalFilesFailed++;
+                    updateFileStatus(filepath,dstfolder, Constants.STATUS_SENDING_FAILED);
                     Log.e("sendWithSmbProtocol", "Uploading failed");
 //                        uploadFailing = true;
                 }
 
             }
+            showNotification("Finished - Uploaded:" + Integer.toString(totalFilesAlreadySent) + " Failed:"  + Integer.toString(totalFilesFailed)+ " Total:"+ Integer.toString(totalFilesShouldBeSent), "Upload Status 100%");
             Log.i("sendWithSmbProtocol","Finished uploading " + fileSrcPaths.size() + " Files!!!");
         }
         catch (Exception e)
@@ -297,7 +302,7 @@ public class UploadFilesService  extends Service {
             Log.e("sendWithSmbProtocol","Failed  uploading all " + fileSrcPaths.size() + " Files!!!. error says:" + e.getMessage());
             for(int i = 0; i<fileSrcPaths.size();i++) {
                 String filepath = fileSrcPaths.get(i).toString();
-                updateStatus(filepath,Constants.STATUS_FAILED_CONNECTING);
+                showNotification("Failed - Connectivity Failure:" + Integer.toString(totalFilesAlreadySent) + " Failed:"  + Integer.toString(totalFilesFailed)+ " Total:"+ Integer.toString(totalFilesShouldBeSent), "Upload Failed");
                 totalHandled++;
             }
 

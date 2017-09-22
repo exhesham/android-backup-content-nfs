@@ -13,35 +13,52 @@
     tools:context="com.apps.exhesham.autoftpsync.RulesActivity"
     tools:showIn="@layout/activity_rules">
 
-    <TableLayout
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/table_rules"
-        android:layout_marginBottom="47dp"
+        android:layout_height="match_parent">
 
-        >
-        <TableRow android:layout_width="fill_parent">
+        <TextView
 
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+            android:text="The files with the extension under the Extension column will be synced to the folder in the same line under the Folder column."
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/textViewInfo"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp" />
 
-                <TextView
-                    android:layout_width="149dp"
-                    android:layout_height="wrap_content"
-                    android:text="Extension"
-                    android:textStyle="normal|bold" />
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/table_rules"
+            android:layout_marginBottom="47dp"
 
-                <TextView
-                    android:layout_width="51dp"
-                    android:layout_height="wrap_content"
-                    android:text="Folder"
-                    android:textStyle="normal|bold" />
+            >
+            <TableRow android:layout_width="fill_parent">
 
-            </LinearLayout>
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
 
-        </TableRow>
+                    <TextView
+                        android:layout_width="149dp"
+                        android:layout_height="wrap_content"
+                        android:text="Extension"
+                        android:textStyle="normal|bold" />
 
-    </TableLayout>
+                    <TextView
+                        android:layout_width="51dp"
+                        android:layout_height="wrap_content"
+                        android:text="Folder"
+                        android:textStyle="normal|bold" />
+
+                </LinearLayout>
+
+            </TableRow>
+
+        </TableLayout>
+
+    </LinearLayout>
+
 </RelativeLayout>

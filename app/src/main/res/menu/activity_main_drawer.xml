@@ -38,6 +38,11 @@
                 android:onClick="help"
                 android:icon="@drawable/help"
                 android:title="Help" />
+            <item
+                android:id="@+id/nav_logs"
+                android:onClick="showLogs"
+                android:icon="@drawable/help"
+                android:title="Logs" />
         </menu>
     </item>
 </menu>

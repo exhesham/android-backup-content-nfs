@@ -406,6 +406,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Log.getStackTraceString(ex);
         }
     }
+    public void showLogs(MenuItem item) {
+        try{
+            Intent k = new Intent(MainActivity.this, LogsActivity.class);
+            startActivity(k);
+        }catch (Exception ex){
+            Log.getStackTraceString(ex);
+        }
+    }
 
     private void setDefaultPaths(){
         JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);

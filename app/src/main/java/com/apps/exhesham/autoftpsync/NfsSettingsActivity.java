@@ -23,12 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
-
-import jcifs.smb.NtlmPasswordAuthentication;
-import jcifs.smb.SmbFile;
-import jcifs.smb.SmbFileOutputStream;
 
 public class NfsSettingsActivity extends AppCompatActivity {
     private Context context;
@@ -60,7 +55,7 @@ public class NfsSettingsActivity extends AppCompatActivity {
         if(defaultAddress.equals("")){
             defaultAddress = Utils.getInstance(context).getDefaultGatewayAddress();
         }
-
+        // try to guess default data...
         if(username.equals("") && password.equals("")) {
             if (Utils.getInstance(context).validateSmbCredintials(new NFSSettingsNode("admin", "admin", defaultAddress, new JSONArray()))) {
                 username = "admin";
@@ -80,12 +75,18 @@ public class NfsSettingsActivity extends AppCompatActivity {
             refreshPath(null);
         }else {
             Log.d("fillSettings", "Convert the smb settings json to spinner");
-            ArrayList<String> routerPathsArray = new ArrayList<>();
+            ArrayList<NfsAPI.DiskNode> routerPathsArray = new ArrayList<>();
             int selectedItem =0;
             for(int i = 0;i < defaultPaths.length();i++){
                 try {
                     JSONObject possibleSelection = defaultPaths.getJSONObject(i);
-                    routerPathsArray.add(possibleSelection.getString("path"));
+                    if (! possibleSelection.has("size")){
+                        // in old version the already stored data doesn't contain the tag and for the app not to crash, i will ignore the size for old versions.
+                        routerPathsArray.add(new NfsAPI.DiskNode(possibleSelection.getString("path"), 0, 0 ));
+                    }else {
+                        routerPathsArray.add(new NfsAPI.DiskNode(possibleSelection.getString("path"), possibleSelection.getLong("free-space"), possibleSelection.getLong("total-space")));
+                    }
+                    // the is_selected used to check if the user chose this disk to be the default
                     if(possibleSelection.getBoolean("is_selected")){
                         selectedItem = i;
                     }
@@ -109,12 +110,18 @@ public class NfsSettingsActivity extends AppCompatActivity {
         TextView serverurlTV = (TextView) findViewById(R.id.text_server);
         Spinner defaultpathTV = (Spinner) findViewById(R.id.text_defaultpath);
         JSONArray allPaths = new JSONArray();
-        for(int i=0; i< defaultpathTV.getAdapter().getCount(); i++){
+        int pathCount = defaultpathTV.getAdapter() == null ? 0 : defaultpathTV.getAdapter().getCount();
+        for(int i=0; i< pathCount; i++){
             JSONObject possiblePathJson = new JSONObject();
-            String possiblePath =   defaultpathTV.getAdapter().getItem(i).toString();
+            NfsAPI.DiskNode possibleDisk =   ((NfsAPI.DiskNode)defaultpathTV.getAdapter().getItem(i));
+            String possibleDiskName =   possibleDisk.diskName;
+            long possibleDiskFreeSpace = possibleDisk.freeSize;
+            long possibleDiskTotalSpace = possibleDisk.totalSize;
             try {
-                possiblePathJson.put("path", possiblePath);
-                possiblePathJson.put("is_selected", defaultpathTV.getSelectedItem().toString().equals(possiblePath));
+                possiblePathJson.put("path", possibleDiskName);
+                possiblePathJson.put("free-space", possibleDiskFreeSpace);
+                possiblePathJson.put("total-space", possibleDiskTotalSpace);
+                possiblePathJson.put("is_selected", defaultpathTV.getSelectedItem().equals(possibleDisk));
                 allPaths.put(possiblePathJson);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -173,13 +180,7 @@ public class NfsSettingsActivity extends AppCompatActivity {
         return allPaths;
     }
 
-    public static String humanReadableByteCount(long bytes, boolean si) {
-        int unit = si ? 1000 : 1024;
-        if (bytes < unit) return bytes + " B";
-        int exp = (int) (Math.log(bytes) / Math.log(unit));
-        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
-        return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
-    }
+
 
     public void refreshPath(View view) {
         try {
@@ -195,13 +196,12 @@ public class NfsSettingsActivity extends AppCompatActivity {
                 @Override
                 public void run() {
 
-                    final ArrayList<String> possibleRootDir = new NfsAPI(new NFSSettingsNode(nfsUsername, nfsPassword, nfsDefaultAddress, new JSONArray())).nfsGetRootDir();
-                    if (possibleRootDir.size() > 0) {
-                        final String availablePath = possibleRootDir.get(0);
+                    final ArrayList<NfsAPI.DiskNode> possibleDisks = new NfsAPI(new NFSSettingsNode(nfsUsername, nfsPassword, nfsDefaultAddress, new JSONArray())).nfsGetConnectedDisks();
+                    if (possibleDisks.size() > 0) {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                fillSpinner(possibleRootDir, 0);
+                                fillSpinner(possibleDisks, 0);
                             }
                         });
 
@@ -215,9 +215,9 @@ public class NfsSettingsActivity extends AppCompatActivity {
         }
     }
 
-    private void fillSpinner(ArrayList<String> possibleRootDir, int selected) {
+    private void fillSpinner(ArrayList<NfsAPI.DiskNode> possibleRootDir, int selected) {
         Spinner defaultpathTV = (Spinner) findViewById(R.id.text_defaultpath);
-        ArrayAdapter<String> adp = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, possibleRootDir);
+        ArrayAdapter<NfsAPI.DiskNode> adp = new ArrayAdapter<NfsAPI.DiskNode>(context, android.R.layout.simple_spinner_item, possibleRootDir);
         adp.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         defaultpathTV.setAdapter(adp);
         defaultpathTV.setSelection(selected);

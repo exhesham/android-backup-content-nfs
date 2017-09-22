@@ -21,7 +21,23 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_rules" />
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:text="each extension under the Extension column will be copied to the folder under the Folder column"
+            android:ems="10"
+            android:id="@+id/editText" />
+
+        <include layout="@layout/content_rules"
+            android:layout_width="match_parent" />
+
+    </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"

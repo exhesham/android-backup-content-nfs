@@ -16,6 +16,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -320,6 +322,20 @@ public class Utils {
             return false;
         }
         return true;
+    }
+
+    public JSONObject createLogEntry(String date, String filename, String filestatus, String distfolder) {
+        JSONObject res = null;
+        try {
+            res = new JSONObject().
+                    put("file_name",filename).
+                    put("file_status", filestatus).
+                    put("dist_folder", distfolder).
+                    put("sync_date", date);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return res;
     }
 
     public static class FileSysAPI {

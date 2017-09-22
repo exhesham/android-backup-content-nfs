@@ -1,5 +1,9 @@
 # Guide
 
+## Wiki
+
+
+
 ## Goal
 
 The goal of this app is to convert your home to be the cloud the easiest way. This app sync your device
@@ -59,7 +63,7 @@ if the path is a default path, then it cannot be deleted by the user.
 }
 ```
 
-The Categories order:
+The Categories order
 ```
 {
     categories: {
@@ -88,7 +92,24 @@ if the value <IGNORE FILE> is mapped to * then the default extensions will ignor
 }
 ```
 
+## The Logs order (TBD)
 
+the goals of the logs is to understand the sync details, files and failures. the representations is as follows:
+
+```
+{
+    sync_logs : [
+            sync_date: 'Jul 15 2017',
+            file_name: ab.jpg,
+            file_status: 'SUCCESS',
+            dist_folder: '/photos'
+
+}
+
+```
+
+The total_handled can be different than total as if the app crashed or the phone turned off then it will quit in the middle.
+The files service `UploadFilesService` is responsible for updating this data. the data will be read from the analytics Activity. it will be shown in a special tab
 ## Notes
 
 * When scanning files for sending, if a file in status sending, it will not be resent in case the sending

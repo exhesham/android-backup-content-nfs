@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbFile;
@@ -122,8 +123,57 @@ public class NfsAPI {
         }
 
     }
-    public ArrayList<String> nfsGetRootDir(){
-        ArrayList<String> res = new ArrayList<>();
+    public static String humanReadableByteCount(long bytes, boolean si) {
+        int unit = si ? 1000 : 1024;
+        if (bytes < unit) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
+        return String.format("%.1f%sB", bytes / Math.pow(unit, exp), pre);
+    }
+
+    /***
+     * this class will contain data about the nfs connected disks.
+     */
+    public static class DiskNode{
+        public String diskName;
+        public long freeSize;
+        public long totalSize;
+
+        public DiskNode(String diskName, long freeSize, long totalSize){
+            this.diskName = diskName;
+            this.freeSize = freeSize;
+            this.totalSize = totalSize;
+        }
+        @Override
+        public String toString(){
+            return diskName + " " + humanReadableByteCount(freeSize,false) + "/" +humanReadableByteCount(totalSize,false);
+        }
+
+        @Override
+        public boolean equals(Object op){
+            // compares only the disk name and ignoring the size
+            if(! (op instanceof DiskNode)){
+                return false;
+            }
+            DiskNode opDN = (DiskNode)op;
+            if(opDN.diskName == null){
+                // i did this so i don't get null pointer on the equal at the last return
+                if(diskName == null){
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+            return opDN.diskName.equals(diskName);
+        }
+    }
+
+    /***
+     * return info about the nfs connected disks
+     * @return
+     */
+    public ArrayList<DiskNode> nfsGetConnectedDisks(){
+        ArrayList<DiskNode> res = new ArrayList<>();
         try{
             String path = "smb://" + settings.getServerurl() + "/";
             String user = settings.getUsername() + ":" + settings.getPassword();
@@ -134,7 +184,8 @@ public class NfsAPI {
             for (SmbFile child : sFile.listFiles()){
                 System.out.println(child.getCanonicalPath());
                 if(child.isDirectory() && child.getDiskFreeSpace() > 0){
-                    res.add(child.getName());
+                    res.add(new DiskNode(child.getName(),child.getDiskFreeSpace(), child.length()));
+
                 }
 
             }
