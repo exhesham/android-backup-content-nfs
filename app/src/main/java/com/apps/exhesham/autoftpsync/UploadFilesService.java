@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.test.rule.logging.LogGraphicsStatsRule;
 import android.util.ArraySet;
 import android.util.Log;
 import android.widget.Toast;
@@ -27,6 +28,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.logging.Logger;
 
 
 /**
@@ -103,11 +105,14 @@ public class UploadFilesService  extends Service {
     /***
      * This is the function that receive the files need to be uploaded and upload them
      * the function is part of the service
+     * as first step we scan the followed directories recursivly, then on each file, we check its history.
+     * after that we upload the new files
      * @return
      */
 
     private int sendFiles() {
         lock_sending_requests = true;
+        //get the directories that need to be followed
         ArraySet<PathDetails> filesToSend = new ArraySet<>();
         JSONArray ja = Utils.getInstance(this).getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);
         totalFilesShouldBeSent = 0;
@@ -116,18 +121,23 @@ public class UploadFilesService  extends Service {
         totalHandled = 0;
         for(int i=0;i<ja.length();i++){
             try {
+                // get the status of the directory. may the user disabled it from being followed
                 JSONObject jo = ja.getJSONObject(i);
                 String status = jo.getString("status");
                 if(Constants.FOLLOWING_DIR.equals(status)){
+                    // get all the files in the folder recursivly
                     ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(jo.getString("path"));
-
+                    Log.d("Sending files", "The files that going to be filtered from first scan are " + pda.size());
                     for (final PathDetails pd: pda) {
+                        // if the file is already sent or it is sending but no timeout or a directory then ignore.
                         if(     pd.isDirectory() ||
-                                Utils.getInstance(this).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENT)||
+                                Utils.getInstance(this).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENT)
+                                ||
                                 (
                                         Utils.getInstance(this).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_SENDING) ||
-                                                Utils.getInstance(this).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_CONNECTING)
-                                ) && ! isTimeout(jo.getLong("date"))){
+                                        Utils.getInstance(this).getPathStatus(pd.getFullpath()).equals(Constants.STATUS_CONNECTING)
+                                ) && ! isTimeout(jo.getLong("date"))
+                                ){
                             continue;
                         }else{
                             filesToSend.add(pd);
@@ -145,7 +155,7 @@ public class UploadFilesService  extends Service {
 
         NFSSettingsNode nfs_settings = Utils.getInstance(this).getSMBSettings();
         showNotification("Initializing " +filesToSend.size()  + " Files...","Upload Status");
-
+        Log.d("sending file", " the number of files that we filtered from the followed folders are: " + filesToSend.size());
         for(PathDetails pd : filesToSend){
 
             String calculatedPath = pd.genPathRelativeToDepth();
@@ -230,7 +240,7 @@ public class UploadFilesService  extends Service {
         Log.d("updateFileStatus", " totalFilesAlreadySent= " + totalFilesAlreadySent+
                 " totalFilesShouldBeSent= " + totalFilesShouldBeSent+" totalHandled= " + totalHandled);
         int percent = (int)(Math.ceil((totalHandled * 100.0f) / totalFilesShouldBeSent));
-        showNotification("Uploaded:" + Integer.toString(totalFilesAlreadySent) + " Failed:"  + Integer.toString(totalFilesFailed)+ " Total:"+ Integer.toString(totalFilesShouldBeSent) + " To:" + dstfolder,"Upload Status " + percent + "%");
+        showNotification("Uploaded:" + Integer.toString(totalFilesAlreadySent) + " Failed:"  + Integer.toString(totalFilesFailed)+ " Total:"+ Integer.toString(totalFilesShouldBeSent),"Upload Status " + percent + "%");
 
         // need to update the data in the metadata storage in order to update counters accordingly.
         Log.d("updateFileStatus", "Storing the status " + status + " for the file " + filename);
@@ -238,13 +248,9 @@ public class UploadFilesService  extends Service {
         // store the logs
         JSONArray allLogs = Utils.getInstance(this).getJsonArrayFromDB("sync_logs");
         try {
-            Date date = Calendar.getInstance().getTime();
 
-            // Display a date in day, month, year format
-            DateFormat formatter = new SimpleDateFormat("dd/MM/yy  hh:mm:ss a");
-            String today = formatter.format(date);
             allLogs.put(new JSONObject().put("file_name",filename).
-                    put("file_status", status).put("dist_folder", dstfolder).put("sync_date", today)
+                    put("file_status", status).put("dist_folder", dstfolder).put("sync_date", System.currentTimeMillis())
                     );
             Utils.getInstance(this).storeConfigString("sync_logs", allLogs.toString());
         } catch (JSONException e) {

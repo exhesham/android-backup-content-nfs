@@ -15,9 +15,25 @@
 
 
 </head>
+<style>
+.hc_spinning_modal {
+
+ border-radius: 50%;
+  width: 8em;
+  height: 8em;
+  display: block;
+    position: absolute;
+    top: 50%;
+    margin-top: -4.05em;
+
+  left: 50%;
+  margin-left: -4em;
+}
+</style>
 <body>
 <script type="text/javascript">
 $(document).ready(function() {
+    $('#loadingSpinner').show();
     loadData();
 } );
 function humanFileSize(bytes, si) {
@@ -39,6 +55,10 @@ function humanFileSize(bytes, si) {
 function loadData(){
 	var logs_result = LOGS_HERE;
     $('#logs_content').DataTable({
+        "processing":true,
+         "initComplete": function(settings, json) {
+            $('#loadingSpinner').hide();
+        },
         "data" : logs_result,
         "columns" : [
             { "data" : "sync_date" },
@@ -55,6 +75,7 @@ function loadData(){
 }
 </script>
 <div class="container">
+    <img id="loadingSpinner" class ="hc_spinning_modal" src="myspinner.gif">
     <h2>Logs</h2>
     <p>Log all the backed up files with their final status.</p>
     <p id='test'></p>

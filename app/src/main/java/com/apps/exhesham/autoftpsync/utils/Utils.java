@@ -109,18 +109,6 @@ public class Utils {
             return Constants.STATUS_NOTHING;
         }
         JSONObject jo;
-//        JSONArray ja = getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS)
-//        for(int i=0;i<ja.length();i++){
-//            try {
-//                if(ja.getJSONObject(i).getString("path").equals(currPath)){
-//                    ja.remove(i);
-//                    i= i==0?i:i-1;
-//
-//                }
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//        }
 
         try {
             jo = new JSONObject(following_path);

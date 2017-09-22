@@ -4,6 +4,11 @@ import android.content.Context;
 import android.support.test.espresso.core.deps.guava.io.CharStreams;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -11,6 +16,7 @@ import android.widget.Toast;
 
 import com.apps.exhesham.autoftpsync.utils.Constants;
 import com.apps.exhesham.autoftpsync.utils.NfsAPI;
+import com.apps.exhesham.autoftpsync.utils.PathDetails;
 import com.apps.exhesham.autoftpsync.utils.Utils;
 
 import org.apache.commons.net.io.Util;
@@ -27,6 +33,7 @@ import java.io.Reader;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,32 +42,67 @@ import java.util.Locale;
 public class LogsActivity extends AppCompatActivity {
     public int totalFailures = 0;
     public int totalSuccess = 0;
-    public class WebAppInterface {
-        Context mContext;
 
-        /** Instantiate the interface and set the context */
-        WebAppInterface(Context c) {
-            mContext = c;
-        }
-
-        /** Show a toast from the web page */
-        @JavascriptInterface
-        public void showToast(String toast) {
-            Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
-        }
-    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         setContentView(R.layout.activity_logs);
 
-
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.logs_toolbar);
+        setSupportActionBar(myToolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         try {
             editHTML();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+//        setContentView(R.layout.activity_logs);
+
+    }
+    public void clearLogs(MenuItem item){
+        JSONArray ja = Utils.getInstance(this).getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);
+        // first delete each log with filename as key
+        try {
+            for(int i=0;i<ja.length();i++){
+
+                // get the status of the directory. may the user disabled it from being followed
+                JSONObject jo = ja.getJSONObject(i);
+                String status = jo.getString("status");
+                if (Constants.FOLLOWING_DIR.equals(status)) {
+                    // get all the files in the folder recursivly
+                    ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(jo.getString("path"));
+                    Log.d("Sending files", "The files that going to be filtered from first scan are " + pda.size());
+                    for (final PathDetails pd : pda) {
+                        // if the file is already sent or it is sending but no timeout or a directory then ignore.
+                        Utils.getInstance(this).storeConfigString(pd.getFullpath(), "");
+                    }
+
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        // now clear the logs
+        Utils.getInstance(this).storeConfigString("sync_logs", "[]");
+    }
+    public void refreshLogs(MenuItem item){
+        try {
+           editHTML();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.logs_toolbar, menu);
+        return true;
     }
     private void editHTML() throws IOException {
         InputStream is = null;
@@ -97,10 +139,10 @@ public class LogsActivity extends AppCompatActivity {
         return res.toString();
     }
 
-    private String reformatDate(String inputString){
+    private String reformatDate(long epoch){
         DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
 
-        Date date = new Date(inputString);
+        Date date = new Date(epoch);
 
         // Display a date in day, month, year format
         DateFormat formatter = new SimpleDateFormat("dd/MM/yy  hh:mm:ss a");
@@ -117,10 +159,14 @@ public class LogsActivity extends AppCompatActivity {
         try {
             JSONArray ja = Utils.getInstance(this).getJsonArrayFromDB("sync_logs");
             for(int i = 0 ; i < ja.length();i++){
-
+                String date;
                 JSONObject currFile = ja.getJSONObject(i);
+                try{
+                    date =  reformatDate(currFile.getLong("sync_date"));
+                }catch (Exception ex){
+                    date =  currFile.getString("sync_date");
+                }
 
-                String date =  reformatDate(currFile.getString("sync_date"));
                 String filename = currFile.getString("file_name");
 
                 String filestatus = currFile.getString("file_status");

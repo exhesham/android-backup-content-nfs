@@ -30,6 +30,25 @@ files are not loaded into your RAM as whole but in chunks.
 * extensions are mapped to folders. Those folders are created in the FTP
 * Categories looks for relevant files in pre-configured paths
 
+# Algorithm
+
+## Filtered Files
+
+When tou press the Sync button, the files are filtered according to the next algorith, after that, the filtered files will be uploaded.
+```
+1. Collect all the files from the followed directoried recursivly
+2. For each collected path
+    2.1 if the path is directory then ignore
+    2.2 else if the file status is SENT SUCCESSFULLY then ignore
+    2.3 else if the file status is SENDING or PREPARING TO BE SENT and it is not timed out then ignore
+    3.4 else, queue the file to be uploaded
+3. foreach  filtered file in the queue
+    3.1 if the file exists on the server (TODO: validate file size too) then ignore
+    3.2 upload the file
+    3.3 update the meta-data about the file
+
+```
+
 # Configuration - Database Structure
 
 The followed path status are both available as standalone and as array
