@@ -166,7 +166,7 @@ public class LogsActivity extends AppCompatActivity {
         JSONObject res = new JSONObject();
         try {
             res.put("sync_date",date).
-                    put("file_size",NfsAPI.humanReadableByteCount(size,false)).
+                    put("file_size",size).
                     put("file_name",filename).
                     put("file_status",status).
                     put("dist_folder",dist);
