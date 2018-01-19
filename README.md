@@ -129,6 +129,7 @@ the goals of the logs is to understand the sync details, files and failures. the
 
 The total_handled can be different than total as if the app crashed or the phone turned off then it will quit in the middle.
 The files service `UploadFilesService` is responsible for updating this data. the data will be read from the analytics Activity. it will be shown in a special tab
+
 ## Notes
 
 * When scanning files for sending, if a file in status sending, it will not be resent in case the sending

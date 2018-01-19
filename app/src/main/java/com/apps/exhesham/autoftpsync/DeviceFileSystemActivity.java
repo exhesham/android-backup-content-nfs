@@ -39,7 +39,7 @@ public class DeviceFileSystemActivity extends AppCompatActivity {
         context = this;
         ftpnode = Utils.getInstance(context).getFTPSettings();
 
-        setContentView( R.layout.activity_ftpsync);
+        setContentView( R.layout.activity_filesystem);
         Toolbar myToolbar = (Toolbar) findViewById(R.id.maintoolbar);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);

@@ -34,9 +34,6 @@
             android:ems="10"
             android:id="@+id/editText" />
 
-        <include layout="@layout/content_rules"
-            android:layout_width="match_parent" />
-
     </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton

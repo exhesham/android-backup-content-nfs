@@ -1,5 +1,6 @@
 package com.apps.exhesham.autoftpsync;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.support.test.espresso.core.deps.guava.io.CharStreams;
 import android.support.v7.app.AppCompatActivity;
@@ -42,6 +43,7 @@ import java.util.Locale;
 public class LogsActivity extends AppCompatActivity {
     public int totalFailures = 0;
     public int totalSuccess = 0;
+    private Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,54 +51,52 @@ public class LogsActivity extends AppCompatActivity {
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         setContentView(R.layout.activity_logs);
-
+        context = LogsActivity.this;
         Toolbar myToolbar = (Toolbar) findViewById(R.id.logs_toolbar);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        try {
-            editHTML();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-//        setContentView(R.layout.activity_logs);
-
+        editHTML();
     }
     public void clearLogs(MenuItem item){
-        JSONArray ja = Utils.getInstance(this).getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);
-        // first delete each log with filename as key
-        try {
-            for(int i=0;i<ja.length();i++){
 
-                // get the status of the directory. may the user disabled it from being followed
-                JSONObject jo = ja.getJSONObject(i);
-                String status = jo.getString("status");
-                if (Constants.FOLLOWING_DIR.equals(status)) {
-                    // get all the files in the folder recursivly
-                    ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(jo.getString("path"));
-                    Log.d("Sending files", "The files that going to be filtered from first scan are " + pda.size());
-                    for (final PathDetails pd : pda) {
-                        // if the file is already sent or it is sending but no timeout or a directory then ignore.
-                        Utils.getInstance(this).storeConfigString(pd.getFullpath(), "");
+        final ProgressDialog progressDialog = ProgressDialog.show(context, "Clearing Logs", "Please wait while logs are clearing...");
+        new Thread() {
+            public void run() {
+                JSONArray ja = Utils.getInstance(context).getJsonArrayFromDB(Constants.DB_FOLLOWED_DIRS);
+                // first delete each log with filename as key
+                try {
+                    for(int i=0;i<ja.length();i++){
+
+                        // get the status of the directory. may the user disabled it from being followed
+                        JSONObject jo = ja.getJSONObject(i);
+                        String status = jo.getString("status");
+                        if (Constants.FOLLOWING_DIR.equals(status)) {
+                            // get all the files in the folder recursivly
+                            ArrayList<PathDetails> pda = Utils.FileSysAPI.getFoldersRecursive(jo.getString("path"));
+                            Log.d("Sending files", "The files that going to be filtered from first scan are " + pda.size());
+                            for (final PathDetails pd : pda) {
+                                // if the file is already sent or it is sending but no timeout or a directory then ignore.
+                                Utils.getInstance(context).storeConfigString(pd.getFullpath(), "");
+                            }
+
+                        }
                     }
-
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
+
+
+                // now clear the logs
+                Utils.getInstance(context).storeConfigString("sync_logs", "[]");
+
+                progressDialog.dismiss();
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        }.start();
 
-
-        // now clear the logs
-        Utils.getInstance(this).storeConfigString("sync_logs", "[]");
     }
     public void refreshLogs(MenuItem item){
-        try {
-           editHTML();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        editHTML();
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -104,32 +104,44 @@ public class LogsActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.logs_toolbar, menu);
         return true;
     }
-    private void editHTML() throws IOException {
-        InputStream is = null;
-        WebView lWebView = (WebView)findViewById(R.id.webView);
-        lWebView.getSettings().setJavaScriptEnabled(true);
-        // register class containing methods to be exposed to JavaScript https://developer.android.com/guide/webapps/webview.html#UsingJavaScript
+    private void editHTML(){
+        final ProgressDialog progressDialog = ProgressDialog.show(context, "Loading Logs", "Please wait while logs are loading...");
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                InputStream is = null;
+                WebView lWebView = (WebView)findViewById(R.id.webView);
+                lWebView.getSettings().setJavaScriptEnabled(true);
+                // register class containing methods to be exposed to JavaScript https://developer.android.com/guide/webapps/webview.html#UsingJavaScript
+                String details;
+                try {
+                    is = getApplicationContext().getAssets().open("logs_template.html");
+                    Reader r = new InputStreamReader(is);
+                    details = CharStreams.toString(r);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    details = "Failed to create the view. please report to exhesham@gmail.com. Thanks";
+                }
+                String logsRecords = logsToHTML();
+                String summary = generateSummary();
+                details = details.replace("LOGS_HERE",logsRecords );
+                details = details.replace("SUMMARY_HERE",summary );
 
-//        JSInterface = new JavaScriptInterface(this);
-//        wv.addJavascriptInterface(JSInterface, "JSInterface");
-        try {
-            is = getApplicationContext().getAssets().open("logs_template.html");
-        } catch (IOException e) {
-            e.printStackTrace();
-            //TODO:Display an appropriate message.
-            return;
-        }
-        Reader r = new InputStreamReader(is);
-        String details = CharStreams.toString(r);
-        String logsRecords = logsToHTML();
-        String summary = generateSummary();
-        details = details.replace("LOGS_HERE",logsRecords );
-        details = details.replace("SUMMARY_HERE",summary );
+                lWebView.getSettings().setJavaScriptEnabled(true);
+                lWebView.loadData(details, "text/html",  "utf-8");
 
-        lWebView.getSettings().setJavaScriptEnabled(true);
-        lWebView.loadData(details, "text/html",  "utf-8");
+                lWebView.setWebChromeClient(new WebChromeClient());
 
-        lWebView.setWebChromeClient(new WebChromeClient());
+                progressDialog.dismiss();
+            }
+        });
+//        new Thread() {
+//            public void run() {
+//
+//
+//            }
+//        }.start();
+
     }
 
     private String generateSummary() {

@@ -2,14 +2,14 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    buildToolsVersion '25.0.0'
     defaultConfig {
         applicationId "com.apps.exhesham.autoftpsync"
-        minSdkVersion 17
+        minSdkVersion 20
         targetSdkVersion 23
         multiDexEnabled true
-        versionCode 22
-        versionName '4.4'
+        versionCode 24
+        versionName '4.6'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }

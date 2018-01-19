@@ -24,7 +24,6 @@ import com.apps.exhesham.autoftpsync.utils.Constants;
 import com.apps.exhesham.autoftpsync.utils.RulesAPI;
 import com.apps.exhesham.autoftpsync.utils.Utils;
 
-import org.apache.commons.io.FilenameUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -233,7 +232,7 @@ public class RulesActivity extends AppCompatActivity {
 
     private void showDialog(final String extension, final String foldername){
         final Dialog commentDialog = new Dialog(this);
-        commentDialog.setContentView(R.layout.edit_rule_layout);
+        commentDialog.setContentView(R.layout.activity_edit_rule);
         Button okBtn = (Button) commentDialog.findViewById(R.id.ok);
         final TextView extensionField = (TextView) commentDialog.findViewById(R.id.extension);
         final TextView folderField = (TextView) commentDialog.findViewById(R.id.folder_name);

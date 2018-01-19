@@ -34,7 +34,7 @@ public class NfsSettingsActivity extends AppCompatActivity {
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
-        setContentView(R.layout.activity_nfs);
+        setContentView(R.layout.activity_nfs_settings);
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.smb_settings_toolbar);
         setSupportActionBar(myToolbar);
@@ -52,7 +52,7 @@ public class NfsSettingsActivity extends AppCompatActivity {
         JSONArray defaultPaths = Utils.getInstance(context).getJsonArrayFromDB(Constants.DB_SMB_DEFAULT_PATH);
         String username = Utils.getInstance(context).getConfigString(Constants.DB_SMB_USERNAME);
         String password = Utils.getInstance(context).getConfigString(Constants.DB_SMB_PASSWORD);
-        if(defaultAddress.equals("")){
+        if(defaultAddress == null || defaultAddress.equals("") ){
             defaultAddress = Utils.getInstance(context).getDefaultGatewayAddress();
         }
         // try to guess default data...

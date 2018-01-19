@@ -12,16 +12,7 @@
         android:allowBackup="true"
         android:icon="@mipmap/app_icon"
         android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@style/AppTheme.NoActionBar">
-        <activity
-            android:name=".FTPSettingsActivity"
-            android:label=""
-            android:parentActivityName=".MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.apps.exhesham.autoftpsync.MainActivity" />
-        </activity>
+        android:supportsRtl="true">
         <activity
             android:name=".HelpActivity"
             android:label=""
@@ -64,8 +55,7 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:label="Backup Phone"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:label="Backup Phone">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -77,7 +67,14 @@
             android:name=".UploadFilesService"
             android:process=":remote" />
 
-        <activity android:name=".LogsActivity"></activity>
+        <activity android:name=".LogsActivity"
+            android:label="Logs"
+            android:parentActivityName=".MainActivity"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.apps.exhesham.autoftpsync.MainActivity" />
+        </activity>
     </application>
 
 </manifest>
