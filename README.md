@@ -7,7 +7,7 @@
 ## Goal
 
 The goal of this app is to convert your home to be the cloud the easiest way. This app sync your device
-files to the SMB storage in your LAN through LAN or through WAN. for security reasons, i recommend to
+files to the SMB/NFS storage in your LAN through LAN or through WAN. for security reasons, i recommend to
 use LAN.
 
 ## Features
